@@ -75,7 +75,7 @@ GCPインフラを構築するGoogleアカウントを用意してください�
 [gcloud CLIをインストールする](https://cloud.google.com/sdk/docs/install?hl=ja)に従ってインストールしてください。
  
 ### 2.1.3. Go
- 
+<TODO>
  
 ### 2.1.4. CircleCI
 #### CircleCIのアカウントを作成
@@ -86,7 +86,7 @@ GCPインフラを構築するGoogleアカウントを用意してください�
 
 ④任意の組織名を入力してLet's goを押下  
  
- ### 2.1.5. Slack
+### 2.1.5. Slack
 #### Slackのアカウントを作成
 [Slack](https://slack.com)へアクセス してアカウントを作成してください。
  
@@ -94,7 +94,9 @@ GCPインフラを構築するGoogleアカウントを用意してください�
 GitHubやCircleCIからの通知先となるワークスペース、チャンネルを作成してください。
  
 ### 2.1.6. Docker
- 
+[https://docs.docker.com/desktop/install/mac-install/]からDocker for Desktopをインストールしてください。
+
+
 ### 2.1.7. Terraform
 #### Terraformをインストール
 ```
@@ -292,41 +294,130 @@ terraform apply
 terraform plan
   
 # 10. 適用(tfstateの保存先がgcsに)
+terraform apply
 ```
- 
-`# 4. terraform.backendをコメントアウト`　は、
- 
-gcloud auth application-default login
- 
- 
-<設定項目と値>
-<適宜リンク>
- 
-#### 2.2.X.2. やること2
-##### 手順
-<設定項目と値>
-<適宜リンク>
- 
-#### 2.2.X.3. やること3
-##### 手順
-<設定項目と値>
-<適宜リンク>
- 
- 
- 
-### 2.2.X. やること
-#### 2.2.X.1. やること1
-##### 手順
-<設定項目と値>
-<適宜リンク>
- 
-#### 2.2.X.2. やること2
-##### 手順
-<設定項目と値>
-<適宜リンク>
- 
-#### 2.2.X.3. やること3
-##### 手順
-<設定項目と値>
-<適宜リンク>
-    
+
+### 2.2.5. ローカル環境を起動する
+#### 手順
+ローカルマシンのターミナルで以下を実行してください。
+
+```
+# 1. プロジェクトルートへ移動
+cd <プロジェクトルート>
+
+# 2. ローカル環境を起動
+make docker-compose-up-d
+
+# 3. 動作確認(Goアプリケーションソースのテスト)
+make docker-go-test
+
+# 4. 動作確認(APIへリクエスト)
+grpcurl -d '{"name": "sample1"}' localhost:8080 api.SampleService.CreateSample
+```
+
+# 3. ディレクトリ・ファイル構成
+```
+リポジトリルート/
+    .circleci/
+        config.yml # ../build/ci/config.ymlへのシンボリックリンクを設定。CircleCIの設定ファイルはここに配置されている必要がある。
+    api/ # API仕様を配置するディレクトリ
+        proto/ # 各RPCサービスの.protoを配置するディレクトリ
+            sample.proto
+    build/ # アプリのビルド、CIに必要なファイルを配置するディレクトリ
+        ci/ # CIの設定やスクリプトを配置
+            config.yml # CircleCIの設定ファイル
+        packages/ # クラウド (AMI)、コンテナ (Docker)、OS (deb、rpm、pkg) パッケージの設定とスクリプトを配置
+            docker/ # Dockerfileを配置
+                Dockerfile.sample_app # サンプルプロジェクトのGoアプリケーションのイメージを生成するためのDockerfile
+    cmd/ # アプリケーションのエントリポイントのソースコードを配置するディレクトリ
+        sample_app/ # サンプルプロジェクトが提供するgRPC APIのエントリポイントのソースコード群を配置
+            environment_variables.go # エントリポイントが必要とする環境変数の定義と、環境変数ロード処理を記述(エントリポイントから呼び出す)
+            infrastructures.go # インフラ層の依存性注入処理を記述(エントリポイントから呼び出す)
+            main.go # Goアプリケーションのエントリポイント
+            presentations.go # プレゼンテーション層の依存性注入処理を記述(エントリポイントから呼び出す)
+            usecases.go # アプリケーション層の依存性注入処理を記述(エントリポイントから呼び出す)
+    deploy/ # アプリケーションをデプロイするインフラ周りの設定ファイルを配置
+        docker-compose/ # docker-compose向けの設定ファイルを配置
+            .env # docker-compose.yml上で展開する環境変数およびコンテナに渡す環境変数を記述
+            docker-compose.yml # ローカル開発環境の構成管理
+            docker-compose-circleci.yml # CircleCI環境の構成管理(ほぼローカル開発環境のものと同じだが、CircleCIの仕様上の制約で一部が異なる)
+        terraform/ # terraformの設定ファイルを配置
+            backend.tf   # tfstate保存先の設定
+            main.tf      # エントリポイント。他の設定ファイルに記述していない全ての設定
+            outputs.tf   # 全ての出力の宣言とその説明
+            providers.tf # 使用する各providerのデフォルト設定
+            README.md    # terraformのREADME
+            variables.tf # 全ての変数の宣言とその説明
+            versions.tf  # terraform自体のバージョンと各providerのバージョン設定
+    internal/ # プライベートなアプリケーション, ライブラリのコードを配置するディレクトリ
+        sample_app/
+            application/ # アプリケーション層
+                repository/ # リポジトリのインターフェース定義を配置(実装はインフラ層で)
+                    transaction/ トランザクション関連のインターフェース定義を配置
+                        connection_interface.go
+                        transaction_interface.go
+                    sample_repository_interface.go # Sampleエンティティリポジトリのインターフェース定義 
+                    sample_repository_mock.go # Sampleエンティティリポジトリのインターフェースのモック(自動生成)
+                request/ # 各ユースケースのリクエストパラメータの実装を配置(各パラメータは、ドメイン層のオブジェクトで扱う)
+                    sample/ # Sampleサービスの各メソッドのリクエストパラメータの実装を配置
+                        create_sample_request.go # SampleサービスCreateSampleメソッドのリクエストパラメータ
+                        delete_sample_request.go # SampleサービスDeleteSampleメソッドのリクエストパラメータ
+                        list_sample_request.go   # SampleサービスListSampleメソッドのリクエストパラメータ
+                        update_sample_request.go # SampleサービスUpdateSampleメソッドのリクエストパラメータ                        
+                response/ # 各ユースケースのレスポンスパラメータの実装を配置
+                    sample/ # Sampleサービスの各メソッドのレスポンスパラメータの実装を配置(各パラメータは、ドメイン層のオブジェクトで扱う)
+                        create_sample_response.go # SampleサービスCreateSampleメソッドのレスポンスパラメータ
+                        delete_sample_response.go # SampleサービスDeleteSampleメソッドのレスポンスパラメータ
+                        list_sample_response.go   # SampleサービスListSampleメソッドのレスポンスパラメータ
+                        update_sample_response.go # SampleサービスUpdateSampleメソッドのレスポンスパラメータ               
+                usecase/ # 各ユースケースの実行処理の実装を配置
+                    sample/ # Sampleサービスの各メソッドの実行処理の実装を配置
+                        create_sample_usecase.go           # ユースケース"SampleサービスCreateSampleメソッド"を実行する構造体の実装
+                        create_sample_usecase_interface.go # ユースケース"SampleサービスCreateSampleメソッド"を実行する構造体のインターフェース定義
+                        create_sample_usecase_mock.go      # ユースケース"SampleサービスCreateSampleメソッド"を実行する構造体のモック
+                        delete_sample_usecase.go           # ユースケース"SampleサービスDeleteSampleメソッド"を実行する構造体の実装
+                        delete_sample_usecase_interface.go # ユースケース"SampleサービスDeleteSampleメソッド"を実行する構造体のインターフェース定義
+                        delete_sample_usecase_mock.go      # ユースケース"SampleサービスCreateSampleメソッド"を実行する構造体のモック
+                        list_sample_usecase.go             # ユースケース"SampleサービスListSampleメソッド"を実行する構造体の実装
+                        list_sample_usecase_interface.go   # ユースケース"SampleサービスListSampleメソッド"を実行する構造体のインターフェース定義
+                        list_sample_usecase_mock.go        # ユースケース"SampleサービスListSampleメソッド"を実行する構造体のモック
+                        update_sample_usecase.go           # ユースケース"SampleサービスUpdateSampleメソッド"を実行する構造体の実装
+                        update_sample_usecase_interface.go # ユースケース"SampleサービスUpdateSampleメソッド"を実行する構造体のインターフェース定義
+                        update_sample_usecase_mock.go      # ユースケース"SampleサービスUpdateSampleメソッド"を実行する構造体のモック
+            domain/ # ドメイン層
+                entity/ # エンティティの実装を配置
+                    sample/ # sampleエンティティ関連の実装を配置
+                        sample.go # sampleエンティティの実装
+                service/ # ドメインサービスのソースコードを配置するディレクトリ
+                value/ # 値オブジェクトのソースコードを配置するディレクトリ
+                    sample_id.go # 値オブジェクトSampleIDのソースコード
+                    sample_name.go # 値オブジェクトSampleNameのソースコード
+            infrastructure/ # インフラ層
+                repository/ # リポジトリの実装を配置
+                    gorm/ # データストアがCloud Spanner、ORマッパー"GORM"利用したリポジトリの実装を配置(インターフェース定義はアプリケーション層でなされている)
+                        transaction/ # トランザクション関連のインターフェース実装を配置
+                            connection.go
+                            transaction.go
+                        sample_repository.go # Sampleエンティティのリポジトリインターフェースの実装を配置
+                        setup.go # エントリポイントで呼び出すインフラ層の依存性注入処理の一部(GORMを利用してSpannerデータベースへ接続、スキーマ定義反映)
+            presentation/ # プレゼンテーション層
+                pb/ # protocで自動生成されるGo言語向けgRPCコードのファイル(*.pb.go) 置き場
+                    api/                            
+                        sample.pb.go # protocで自動生成
+                        sample_grpc.pb.go # protocで自動生成
+                sample/ # sample_grpc.pb.go で定義されているgRPCサーバーインターフェース"SampleSeviceServer"に対する実装を配置
+                    create_sample.go # gRPCサーバーインターフェース"SampleServiceServer"のCreateSampleメソッドを扱う構造体の定義。
+                    delete_sample.go # gRPCサーバーインターフェース"SampleServiceServer"のDeleteSampleメソッドを扱う構造体の定義。
+                    list_sample.go   # gRPCサーバーインターフェース"SampleServiceServer"のListSampleメソッドを扱う構造体の定義。
+                    sample.go        # gRPCサーバーインターフェース"SampleServiceServer"の実装にあたる構造体"SampleServiceServer"の定義。各メソッドは埋め込み構造体へ移譲
+                    update_sample.go # gRPCサーバーインターフェース"SampleServiceServer"のUpdateSampleメソッドを扱う構造体の定義。
+    scripts/ # Makefileから呼び出すスクリプトがあれば配置
+    .editorconfig # 各ファイルの拡張子別のフォーマット設定(EditorConfigによる自動ファイルフォーマットは、多くのIDE・エディタで対応している)
+    .gitignore
+    go.mod
+    go.sum
+    makefile # よく使うがオプション指定が複雑なコマンドをエイリアスとして登録
+    README.md # このサンプルプロジェクトの説明
+```
+
+
