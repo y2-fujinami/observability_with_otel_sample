@@ -420,4 +420,44 @@ grpcurl -d '{"name": "sample1"}' localhost:8080 api.SampleService.CreateSample
     README.md # このサンプルプロジェクトの説明
 ```
 
+# 4. タスク別の作業手順
+[1.2.2. 想定ワークフロー](#122-想定ワークフロー)に登場する以下の工程について、具体的な作業手順を説明します。
+- 作業ブランチに変更を加える
+- クラウドインフラリソースの設定の変更を適用
+
+## 4.1. Goアプリケーション(API)の開発・保守
+<TODO>
+
+
+## 4.2. クラウドインフラリソースの設定変更
+1. リソースの変更内容に応じて、deploy/terraform/ 以下の.tfファイルを適宜修正します。
+2. ローカルマシンのターミナルで以下を実行します。
+ 
+```
+# 1. Google Cloud SDKを使うアプリが、GCPプロジェクトのインフラリソースを変更する権限があるGoogleアカウントを使って認証できるようにする
+gcloud auth application-default login
+
+# ブラウザで対象のGoogleアカウントにログイン。ログイン後ターミナルに戻ってくる(ブラウザのクッキーを全削除しておかないとうまく動作しないかも)
+  
+# 2. terraformのルートモジュールへ移動
+cd <プロジェクトルート>/deploy/terraform
+
+# 3. .tfの構文に問題がないかチェック
+terraform validate
+  
+# 4. 必要なproviderをセットアップ
+terraform init
+  
+# 5. リソース設定の変更箇所を事前確認
+terraform plan
+  
+# 6. リソース設定の変更を適用
+terraform apply
+```
+
+## 4.3. CircleCIの設定変更
+1. .circleci/config.yml を開き、設定を変更して作業ブランチにcommit、pushします。
+2. [2.2.2. GitHub連携したCircleCIプロジェクトを作成](#222-github連携したcircleciプロジェクトを作成)で作成していたCircleCIのプロジェクトへアクセスし、期待通りの挙動になっていることを確認します。
+
+
 
