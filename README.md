@@ -1,6 +1,6 @@
 # 1. 概要
 ## 1.1. 前提
-**Webアプリ開発におけるモダンな環境**
+**Webアプリ開発におけるモダンな環境**  
 昨今のWeb系の開発現場では、以下の要素を備えた環境を整えるのがモダンとされています。
 - Gitでのコード管理(GitHub/GitLab etc.)
 - クラウドインフラの利用(AWS/GCP/Azure etc.)
@@ -17,8 +17,8 @@
 - 優秀なエンジニアを採用しやすくなる
  
 ## 1.2. このリポジトリは何か？
-モダンな環境を構築するためのサンプルプロジェクトです。 
-このREADMEに含まれる[セットアップ手順](#2-セットアップの手順)の工程に従うことで、以下のシステム構成の環境を構築できます。
+モダンな環境を構築するためのサンプルプロジェクトです。  
+このREADMEに含まれる[セットアップ手順](#2-セットアップの手順)の工程に従うことで、以下のシステム構成の環境を構築できます。  
 
 ### 1.2.1. システム構成
 
@@ -52,7 +52,7 @@ CI/CDツール|CircleCI
 このサンプルプロジェクトでは、リモートに1つの環境があることしか想定していません。  
 Webアプリケーション開発現場においては、QA環境、ステージング環境、本番環境といった環境も並行して存在しているのが一般的です。  
 リモートに1つしか環境がない場合、例えばTerraformを適用するとリモート環境のクラウドインフラに反映されるため、インフラ周りの不具合が発生したら即流出という形になってしまいます。  
-実際の現場でこのサンプルプロジェクトをベースに環境を構築する際には、対象のWebアプリのシステム検証〜本番リリースまでのワークフローをよく検討した上で、ブランチ運用、CircleCIの設定、Terraformの設定を変更することになると思います。
+実際の現場でこのサンプルプロジェクトをベースに環境を構築する際には、対象のWebアプリのシステム検証〜本番リリースまでのワークフローをよく検討した上で、ブランチ運用、CircleCIの設定、Terraformの設定を変更することになると思います。  
 
 
 # 2. セットアップの手順
@@ -180,10 +180,9 @@ git push origin
 RulesetName| |任意のブランチ保護ルール名|ブランチ保護ルールを管理する上での名前。"masterブランチ"などわかりやすいものを設定。
 Enforcement status| |Atcive|このブランチ保護ルールを適用するか否か
 Targets|Target branches|master|ブランチ保護ルールを適用するブランチ名のパターン
-Rules|Branch protections|- Require a pull request before merging: true<br>  - Required approvals: 1<br>  - Dismiss stale pull request approvals when new commits are pushed: true<br>  - Require review from Code Owners: false<br>  - Require approval of the most recent reviewable push: false<br>  - Require conversation resolution before merging: false<br>|- マージ前のPR必須にするか<br>  - 必須のapprove数<br>  - approve後にpushがあった場合、過去のapproveを却下する<br>  - コード所有者のapprove必須にするか<br>　 - 直近のレビュー可能なpushのapproveを必須にするか<br>  - マージ前の会話の解決を必須にするか<br>
- | |- Require status checks to pass: true<br>　 - Require branches to be up to date before merging: true<br>　　- ci/circleci: build-and-test|-マージしようとしているブランチのステータスチェック通過を必須にするか<br>  - 最新のコードでチェックしなければならないか(後述のCircleCIとGitHubの連携設定が終わった後でないと設定不可)<br>
- 
-| |Block force pushes: true|
+Rules|Branch protections|- Require a pull request before merging: true<br>　- Required approvals: 1<br>　- Dismiss stale pull request approvals when new commits are pushed: true<br>　- Require review from Code Owners: false<br>　- Require approval of the most recent reviewable push: false<br>　- Require conversation resolution before merging: false<br>|- マージ前のPR必須にするか<br>　- 必須のapprove数<br>　- approve後にpushがあった場合、過去のapproveを却下する<br>　- コード所有者のapprove必須にするか<br>　- 直近のレビュー可能なpushのapproveを必須にするか<br>　 - マージ前の会話の解決を必須にするか<br>
+　|　|- Require status checks to pass: true<br>　- Require branches to be up to date before merging: true<br>　- ci/circleci: build-and-test|- マージしようとしているブランチのステータスチェック通過を必須にするか<br>　- 最新のコードでチェックしなければならないか(後述のCircleCIとGitHubの連携設定が終わった後でないと設定不可)<br>　 
+　|　|Block force pushes: true|
  
 ##### 参考 
 - [プランと請求日を表示する](https://docs.github.com/ja/billing/managing-your-github-billing-settings/viewing-your-subscriptions-and-billing-date)
