@@ -247,7 +247,7 @@ CircleCIへログイン > [CircleCIのアカウントを作成](#CircleCIのア�
 項目|値
 ---|---
 Environment Variable Name|SLACK_ACCESS_TOKEN
-Value|[2.2.3.1. 通知先となるSlackチャンネルのワークスペースにSlackアプリを作成](2231-通知先となるSlackチャンネルのワークスペースにSlackアプリを作成)で作成したアクセストークン
+Value|[2.2.3.1. 通知先となるSlackチャンネルのワークスペースにSlackアプリを作成](#2231-通知先となるSlackチャンネルのワークスペースにSlackアプリを作成)で作成したアクセストークン
  
 **Slackチャンネル**
  
