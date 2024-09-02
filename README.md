@@ -41,9 +41,6 @@ CI/CDツール|CircleCI
 **システム構成(CircleCI, リモート環境)**
 ![モダン開発環境-Lv2(GCP, CircleCI) drawio](https://github.com/user-attachments/assets/20a1a292-cc8f-410e-bc3f-7fef7eb8a682)
 
-
-
-
 ### 1.2.2. 想定ワークフロー
 上記のシステム構成において、以下に示すフローで開発・保守のタスクを進めることを想定しています。
 
@@ -63,7 +60,6 @@ CI/CDツール|CircleCI
 Webアプリケーション開発現場においては、QA環境、ステージング環境、本番環境といった環境も並行して存在しているのが一般的です。  
 リモートに1つしか環境がない場合、例えばTerraformを適用するとリモート環境のクラウドインフラに反映されるため、インフラ周りの不具合が発生したら即流出という形になってしまいます。  
 実際の現場でこのサンプルプロジェクトをベースに環境を構築する際には、対象のWebアプリのシステム検証〜本番リリースまでのワークフローをよく検討した上で、ブランチ運用、CircleCIの設定、Terraformの設定を変更することになると思います。  
-
 
 # 2. セットアップの手順
 ※各サービス、ツールの経年変化により手順が多少変わる可能性があります。
@@ -325,7 +321,7 @@ make docker-go-test
 grpcurl -d '{"name": "sample1"}' localhost:8080 api.SampleService.CreateSample
 ```
 
-# 3. ディレクトリ・ファイル構成
+# 3. プロジェクトの構成
 ```
 リポジトリルート/
     .circleci/
@@ -430,16 +426,75 @@ grpcurl -d '{"name": "sample1"}' localhost:8080 api.SampleService.CreateSample
     README.md # このサンプルプロジェクトの説明
 ```
 
-# 4. タスク別の作業手順
+## 補足
+試験的に、プロジェクト構成は、[Standard Go Project Layout](https://github.com/golang-standards/project-layout/blob/master/README_ja.md)で紹介されている構成になるべく沿う形にしてみた。  
+特に`cmd/sample_app/`配下に本サンプルプロジェクトのGoアプリケーションのエントリポイントとなる`main.go`を配置し、main.goから呼び出す内部処理を`internal/sample_app/`配下に配置している。
+
+
+**`internal/sample_app/`以下**
+オニオンアーキテクチャを意識して、以下の4層に大きく分割したディレクトリ構成にしている。
+- presentation
+- application
+- domain
+- infrastructure
+
+**`deploy/terraform`/以下**
+シンプルに、以下のプロジェクト構成とした。
+
+```
+terraform/
+  backend.tf # tfstateの保存先と、保存先の詳細設定
+  main.tf # エントリポイントであり、他のファイルに記述していない全ての設定
+  outputs.tf # 全ての出力宣言および説明
+  providers.tf # 使用するprovider群のデフォルト設定
+  variables.tf  # 全ての変数宣言および説明。各リソースで今後環境ごとに値を切り替えそうな設定項目。
+  versions.tf  # terraformのバージョンとproviderのバージョン
+```
+
+**参考**  
+- [「それ、どこに出しても恥ずかしくないTerraformコードになってるか？」](https://speakerdeck.com/yuukiyo/terraform-aws-best-practices)
+
+# 4. API仕様
+TODO:自動生成できるようにしてリンクを貼る
+
+# 5. タスク別の作業手順
 [1.2.2. 想定ワークフロー](#122-想定ワークフロー)に登場する以下の工程について、具体的な作業手順を説明します。
 - 作業ブランチに変更を加える
 - クラウドインフラリソースの設定の変更を適用
 
-## 4.1. Goアプリケーション(API)の開発・保守
-<TODO>
+## 5.1. Goアプリケーション(API)の開発・保守
+1. 必要な`*.go`ファイルにプロダクションコードを記述し、`*_go.test`ファイルにテストコードを記述します。
+2. ローカル開発環境を(再)起動します(スキーマ定義に変更が入らない場合は不要です)
+```
+make doker-compose-full-reload-d
+```
+3. 記述したプロダクションコードのユニットテストを実行します。
+```
+make docker-go-test-serial
+```
+4. ローカル開発環境のAPIの動作を確認します。
+```
+# apiコンテナ外部からのアクセスでAPIの動作を確認
+## サンプルデータを追加
+grpcurl -plaintext -d '{"name": "sample1"}' localhost:8080 api.SampleService.CreateSample
+
+## サンプルデータを更新
+grpcurl -plaintext -d '{"id": "<サンプルデータ追加時のレスポンスに含まれるID>", "name": "updated-sample1"}' localhost:8080  api.SampleService.UpdateSample
+
+## サンプルデータの一覧を取得
+grpcurl -plaintext -d '{"ids":["<サンプルデータ追加時のレスポンスに含まれるID>"]}' lodalhost:8080 api.SampleService.ListSamples
+
+## サンプルデータを削除
+grpcurl -plaintext -d '{"id":["<サンプルデータ追加時のレスポンスに含まれるID>"]}' localhost:8080 api.SampleService.DeleteSample
+```
+
+TODO: 以下について場合分けされておらず不十分。
+- protoからのGoソース生成
+- 各層のGoソース記述
+- スキーマ変更時
 
 
-## 4.2. クラウドインフラリソースの設定変更
+## 5.2. クラウドインフラリソースの設定変更
 1. リソースの変更内容に応じて、deploy/terraform/ 以下の.tfファイルを適宜修正します。
 2. ローカルマシンのターミナルで以下を実行します。
  
@@ -465,9 +520,26 @@ terraform plan
 terraform apply
 ```
 
-## 4.3. CircleCIの設定変更
+3. リモート開発環境のAPIの動作を確認します。
+```
+## サンプルデータを追加
+grpcurl -d '{"name": "sample1"}' <Cloud Run サービスのID>.run.app:443 api.SampleService.CreateSample
+
+## サンプルデータを更新
+grpcurl -d '{"id": "<サンプルデータ追加時のレスポンスに含まれるID>", "name": "updated-sample1"}' <Cloud Run サービスのID>.run.app:443  api.SampleService.UpdateSample
+
+## サンプルデータの一覧を取得
+grpcurl -d '{"ids":["<サンプルデータ追加時のレスポンスに含まれるID>"]}' <Cloud Run サービスのID>.run.app:443 api.SampleService.ListSamples
+
+## サンプルデータを削除
+grpcurl -d '{"id":["<サンプルデータ追加時のレスポンスに含まれるID>"]}' <Cloud Run サービスのID>.run.app:443 api.SampleService.DeleteSample
+```
+
+`<Cloud Run サービスのID>`は、コンソール等で確認可能。
+コンソール上では、URLが `https://<Cloud Run サービスのID>.run.app` と表示される。
+
+
+## 5.3. CircleCIの設定変更
 1. .circleci/config.yml を開き、設定を変更して作業ブランチにcommit、pushします。
 2. [2.2.2. GitHub連携したCircleCIプロジェクトを作成](#222-github連携したcircleciプロジェクトを作成)で作成していたCircleCIのプロジェクトへアクセスし、期待通りの挙動になっていることを確認します。
-
-
 
