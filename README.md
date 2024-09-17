@@ -159,7 +159,12 @@ git remote -v
 git push origin
 ```
  
-####  2.2.1.3. リポジトリの設定を変更
+#### 2.2.1.3. サンプルプロジェクトの設定を変更
+GCPのプロジェクトID，リージョン、ゾーンの設定を変更します。
+
+<TODO>
+
+####  2.2.1.4. リポジトリの設定を変更
 複数人で開発することを想定し、利便性向上、誤操作による復旧の手間を低減するという観点から、以下の項目を設定します。
 - wiki利用可: デフォルト設定で可能
 - masterブランチに対して以下の制限を設定(ブランチ保護ルール)
@@ -193,6 +198,7 @@ Rules|Branch protections|- Require a pull request before merging: true<br>　- R
 - [プルリクエストを自動的にマージする](https://docs.github.com/ja/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/automatically-merging-a-pull-request)
 - [保護されたブランチについて](https://docs.github.com/ja/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches#restrict-who-can-push-to-matching-branches)
  
+
  
 ### 2.2.2. GitHub連携したCircleCIプロジェクトを作成
 #### 手順
@@ -211,12 +217,10 @@ Rules|Branch protections|- Require a pull request before merging: true<br>　- R
 ④連携するGitHubリポジトリのアカウントを選択 > Only select repositories にチェックを入れて、連携するリポジトリを選択して Install & Authorize  
 ![circleci_install_authorize](https://github.com/user-attachments/assets/d1e4c380-d102-4416-a7d1-746c4671d50e)
 
-⑤Project Name へ任意のCircleCIプロジェクト名を入力
-
-⑥Use Existing Configを押下  
+⑤Use Existing Configを押下  
 ![use_existing_config](https://github.com/user-attachments/assets/4cb83562-84b4-4a17-af29-cf0efb6e9d15)
 
-⑦Start Building を押下  
+⑥Start Building を押下  
 ![circleci-start-building](https://github.com/user-attachments/assets/05ba9085-2696-4d1a-87b5-1c40fc3ecb65)
 
 この段階では、CircleCIとSlackを連携する設定をしていないため、Slack通知のjobでエラーになってしまいます。  
