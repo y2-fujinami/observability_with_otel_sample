@@ -1,5 +1,5 @@
 # このリポジトリは何か
-モダンな開発環境の一例として、以下のシステム構成の環境を提供するサンプルプロジェクトです。
+モダンな開発環境の一例として、以下のシステム構成の環境を提供するサンプルプロジェクトです。  
 本READMEに含まれる環境構築手順に従ってセットアップできます。
 
 **システム構成図(全体)**  
@@ -22,24 +22,28 @@ CI/CDツール|CircleCI
 ![モダン開発環境-Lv2(GCP, CircleCI)](https://github.com/user-attachments/assets/788b3230-7f19-4eb0-864f-bf07ddc2a7a7)
 
 # 2. 環境構築手順
-※各サービス、ツールの経年変化により手順が多少変わる可能性があります。
- 
 ## 2.1. 各サービス、ツールの初期設定
+各サービスについて、無料でゼロから準備する前提での手順となっています。  
+すでに試すことのできるアカウント等をお持ちの場合、ツールをインストール済みの場合は、適宜手順をスキップしてください。  
+また、各ツール、サービスとも経年変化により手順が多少変わる可能性があります。  
+
 ### 2.1.1. GitHub
 #### GitHubのアカウントを作成
 [GitHub](https://github.com/)へアクセス > Sign up
-以降、画面の指示に従って作成してください。
+以降、画面の指示に従って作成してください
+Free/Teamsは任意。Freeの場合かつ、Privateリポジトリにする場合は、後述のリポジトリの保護ルールが適用できません。
  
 ### 2.1.2. GCP
 #### Googleアカウントを作成
 GCPインフラを構築するGoogleアカウントを用意してください。
- 
+
 #### GCPのFree Trialを申請
-[GCPのFree Trial(90日間$300で使い放題)](https://cloud.google.com/free?hl=ja)を申請してください。
+[GCPのFree Trial(90日間$300で使い放題)](https://cloud.google.com/free?hl=ja)を申請してください。  
+クレジットカード情報が必要になります。
  
 #### gcloud CLIをインストール
 [gcloud CLIをインストールする](https://cloud.google.com/sdk/docs/install?hl=ja)に従ってインストールしてください。
- 
+
 ### 2.1.3. Go
 <TODO>
  
@@ -60,7 +64,7 @@ GCPインフラを構築するGoogleアカウントを用意してください�
 GitHubやCircleCIからの通知先となるワークスペース、チャンネルを作成してください。
  
 ### 2.1.6. Docker
-[https://docs.docker.com/desktop/install/mac-install/]からDocker for Desktopをインストールしてください。
+[Docker Desktop](https://docs.docker.com/desktop/install/mac-install/)からDocker for Desktopをインストールしてください。
 
 
 ### 2.1.7. Terraform
@@ -73,13 +77,13 @@ brew install tfenv
 tfenv list-remote
   
 # terraformをバージョンを指定してインストール
-tfenv install <バージョン>
+tfenv install 1.9.1
   
 # インストール済みのterraformのバージョンを一覧表示(*付きが現在使用しているバージョン)
 tfenv list
   
 # 使用するterraformのバージョンを切り替え
-tfenv use <バージョン>  
+tfenv use 1.9.1 
 ```
 実務上、terreformのバージョンアップ作業が発生する可能性を考慮して、tfenv経由でインストールしています。
  
@@ -98,7 +102,7 @@ Repository name|任意
 Description|任意
 Public/Private|Private
 Add a README file|チェックしない
-Add .gitignore|なし
+Add .gitignore|None
 Choose a license|None
  
  
@@ -107,13 +111,46 @@ Choose a license|None
  
 ##### 手順
 ローカルマシンのターミナルで以下を実行してください。
- 
+
+SSHキーの生成
 ```
+cd ~/.ssh
+ssh-keygen -t ed25519 -C "<作成したGitHubアカウントのメールアドレス>"
+```
+
+SSHキー(公開鍵)をGitHubへ登録
+GitHub(Web)へログイン > 右上のアバターアイコン > SSH and GPG keys > New SSH key で公開鍵をコピーして登録
+
+SSHの設定ファイル編集
+```
+Host <任意のホスト名>
+  HostName github.com
+  User git
+  IdentityFile "<SSH秘密鍵のパス>"
+```
+
+ 
+サンプルプロジェクトを自身のリモートリポジトリへコピー
+```
+# サンプルプロジェクトをcloneするディレクトリへ移動
+cd <任意のディレクトリ>
+
 # サンプルプロジェクトをclone
 git clone https://github.com/fnami0316/modern-dev-env-app-sample.git
- 
+
+# サンプルプロジェクトのディレクトリへ移動
+cd modern-dev-env-app-sample
+
+# 使用するgitアカウントを設定
+git config --local user.name "<任意の名前>"
+git config --local user.email "<作成したGitHubアカウントのメールアドレス>"
+
+# gitアカウントの設定確認
+git config user.name
+git config user.email
+
 # ローカルブランチ(master)のリモートリポジトリを、サンプルプロジェクトのものから自身のGitHubアカウントのリモートリポジトリへ変更
-git remote set-url origin <自身のリモートリポジトリのURL>
+git remote set-url origin git@<↑で設定した任意のホスト名>:<GitHubアカウント名>/<リポジトリ名>.git
  
 # 現在のリモートリポジトリを確認
 git remote -v
@@ -121,9 +158,6 @@ git remote -v
 # 自身のGitHubアカウントのリモートリポジトリにサンプルプロジェクトをpush
 git push origin
 ```
- 
-##### 参考
-- [cloneしたリポジトリを別のリポジトリにpushする流れ](https://yuito-blog.com/repository-change/#index_id)
  
 ####  2.2.1.3. リポジトリの設定を変更
 複数人で開発することを想定し、利便性向上、誤操作による復旧の手間を低減するという観点から、以下の項目を設定します。
@@ -133,10 +167,11 @@ git push origin
     - 他のブランチをマージする前にPR必須にする
     - マージするブランチ側でのテスト必須にする
  
- 
+
+※Freeプランかつ、Privateリポジトリにする場合は、このリポジトリの保護ルールは適用できないため無視してください。
 ##### 手順
  
-①GitHubへログイン > 対象のリポジトリのSettings > Code and automation - Rules で New ruleset  > New branch ruleset で New ruleset > New branch ruleset
+①GitHubへログイン > 対象のリポジトリのSettings > Code and automation - Rules - Rulesetsで New ruleset  > New branch ruleset
 →以下の画面が表示されます。
  
 ![image2024-7-5_16-49-30-](https://github.com/user-attachments/assets/f386aa20-b93f-4e6c-89d5-e3f811fb0a05)
@@ -147,8 +182,8 @@ git push origin
 ---|---|---|---
 RulesetName| |任意のブランチ保護ルール名|ブランチ保護ルールを管理する上での名前。"masterブランチ"などわかりやすいものを設定。
 Enforcement status| |Atcive|このブランチ保護ルールを適用するか否か
-Targets|Target branches|master|ブランチ保護ルールを適用するブランチ名のパターン
-Rules|Branch protections|- Require a pull request before merging: true<br>　- Required approvals: 1<br>　- Dismiss stale pull request approvals when new commits are pushed: true<br>　- Require review from Code Owners: false<br>　- Require approval of the most recent reviewable push: false<br>　- Require conversation resolution before merging: false<br>|- マージ前のPR必須にするか<br>　- 必須のapprove数<br>　- approve後にpushがあった場合、過去のapproveを却下する<br>　- コード所有者のapprove必須にするか<br>　- 直近のレビュー可能なpushのapproveを必須にするか<br>　 - マージ前の会話の解決を必須にするか<br>
+Targets|Target branches|master|ブランチ保護ルールを適用するブランチ名のパターン。Include by patternから設定
+Rules|Branch protections|- Require a pull request before merging: true<br>　- Required approvals: 1<br>　- Dismiss stale pull request approvals when new commits are pushed: true<br>　- Require approval of the most recent reviewable push: false<br>　- Require conversation resolution before merging: false<br>|- マージ前のPR必須にするか<br>　- 必須のapprove数<br>　- approve後にpushがあった場合、過去のapproveを却下する<br>　- 直近のレビュー可能なpushのapproveを必須にするか<br>　 - マージ前の会話の解決を必須にするか<br>
 　|　|- Require status checks to pass: true<br>　- Require branches to be up to date before merging: true<br>　- ci/circleci: build-and-test|- マージしようとしているブランチのステータスチェック通過を必須にするか<br>　- 最新のコードでチェックしなければならないか(後述のCircleCIとGitHubの連携設定が終わった後でないと設定不可)<br>　 
 　|　|Block force pushes: true|
  
@@ -165,7 +200,7 @@ Rules|Branch protections|- Require a pull request before merging: true<br>　- R
 ![circleci_create_project](https://github.com/user-attachments/assets/6d14082a-2159-44b9-9224-a0c50c02bec8)
 
  
-②Build, test, and deploy a software application 押下  
+②Build, test, and deploy a software application > 任意のプロジェクト名を入力して Next: set up a pipeline
 ![circleci_what_would_you_like](https://github.com/user-attachments/assets/1c325039-9971-40be-a32a-1dd1ff5d6b9f)
 
  
