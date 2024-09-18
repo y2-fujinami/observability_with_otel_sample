@@ -21,6 +21,7 @@ CI/CDツール|CircleCI
 **システム構成(CircleCI, リモート環境)**
 ![モダン開発環境-Lv2(GCP, CircleCI)](https://github.com/user-attachments/assets/788b3230-7f19-4eb0-864f-bf07ddc2a7a7)
 
+---
 # 2. 環境構築手順
 ## 2.1. 各サービス、ツールの初期設定
 各サービスについて、無料でゼロから準備する前提での手順となっています。  
@@ -175,7 +176,6 @@ GCPのプロジェクトID，リージョン、ゾーンの設定を変更しま
 
 ※Freeプランかつ、Privateリポジトリにする場合は、このリポジトリの保護ルールは適用できないため無視してください。
 ##### 手順
- 
 ①GitHubへログイン > 対象のリポジトリのSettings > Code and automation - Rules - Rulesetsで New ruleset  > New branch ruleset
 →以下の画面が表示されます。
  
@@ -198,7 +198,7 @@ Rules|Branch protections|- Require a pull request before merging: true<br>　- R
 - [プルリクエストを自動的にマージする](https://docs.github.com/ja/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/automatically-merging-a-pull-request)
 - [保護されたブランチについて](https://docs.github.com/ja/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches#restrict-who-can-push-to-matching-branches)
  
-
+---
  
 ### 2.2.2. GitHub連携したCircleCIプロジェクトを作成
 #### 手順
@@ -206,56 +206,79 @@ Rules|Branch protections|- Require a pull request before merging: true<br>　- R
 ![circleci_create_project](https://github.com/user-attachments/assets/6d14082a-2159-44b9-9224-a0c50c02bec8)
 
  
-②Build, test, and deploy a software application > 任意のプロジェクト名を入力して Next: set up a pipeline
-![circleci_what_would_you_like](https://github.com/user-attachments/assets/1c325039-9971-40be-a32a-1dd1ff5d6b9f)
-
- 
-③GitHubを選択  
-![circleci_select_repo](https://github.com/user-attachments/assets/99bd6f0f-df09-4c79-b1ed-12097bfc4982)
+②Build, test, and deploy a software application を選択  
+![image](https://github.com/user-attachments/assets/ded0f376-7465-4331-8b53-11ecdb1922d5)
 
 
-④連携するGitHubリポジトリのアカウントを選択 > Only select repositories にチェックを入れて、連携するリポジトリを選択して Install & Authorize  
-![circleci_install_authorize](https://github.com/user-attachments/assets/d1e4c380-d102-4416-a7d1-746c4671d50e)
+③任意のプロジェクト名を入力して Next: set up a pipeline を押下  
+![image](https://github.com/user-attachments/assets/8b1c0c30-b1d9-4792-b546-ddb1ce586996)
 
-⑤Use Existing Configを押下  
-![use_existing_config](https://github.com/user-attachments/assets/4cb83562-84b4-4a17-af29-cf0efb6e9d15)
 
-⑥Start Building を押下  
-![circleci-start-building](https://github.com/user-attachments/assets/05ba9085-2696-4d1a-87b5-1c40fc3ecb65)
+④任意のCircleCIプロジェクト名を 入力してNext: choosse a repo を押下  
+![image](https://github.com/user-attachments/assets/89a7f97d-18e0-4656-9573-98a7821b4115)
 
-この段階では、CircleCIとSlackを連携する設定をしていないため、Slack通知のjobでエラーになってしまいます。  
-![circleci-error](https://github.com/user-attachments/assets/7a8b065a-95ee-4dd7-bddc-062275b885ea)
+⑤Connect to GitHubを選択  
+![image](https://github.com/user-attachments/assets/3b3d9288-1378-4b4a-af7b-62c014068972)
 
-[2.2.3. CircleCIとSlackを連携](#223-CircleCIとSlackを連携)で設定します。
- 
+⑥連携するGitHubのアカウントでログイン  
+![image](https://github.com/user-attachments/assets/2d4a73f2-f8af-402e-8163-2cafe127e450)
+
+(あらかじめGitHubからログアウトしておかないと、目標のアカウントとうまく連携できないことがあります)
+
+⑦Only select repositories を選択し、連携するリポジトリを選択して Install & Authorize  
+![image](https://github.com/user-attachments/assets/0093e93f-605c-489e-a09b-a3a43a5c27b1)
+
+→ CircleCIのWebページに戻ってきます
+![image](https://github.com/user-attachments/assets/80680992-9b80-4124-ba5a-89e017ab0f7c)
+
+⑧連携するリポジトリを選択して、Next: set up your config を押下  
+![image](https://github.com/user-attachments/assets/e55ccc88-9828-4e5f-a42d-806e6090cb02)
+
+⑨Next: set up triggers を押下  
+![image](https://github.com/user-attachments/assets/9a1fffa1-6bf7-4bd4-8908-cc9863178aab)
+
+⑩Next: review and finish setup を押下  
+![image](https://github.com/user-attachments/assets/4b06ceac-adf4-4f35-96a1-18c2134fa309)
+
+⑪Finish setup を押下  
+![image](https://github.com/user-attachments/assets/e376adcc-2736-497d-a647-5561e2dacc04)
+
+---
+
 ### 2.2.3. CircleCIとSlackを連携
 #### 2.2.3.1. 通知先となるSlackチャンネルのワークスペースにSlackアプリを作成
 ##### 手順
 **①アプリの作成** 
-Slack API WebサイトのYour Apps > Create an App > From scratch > App Name に任意のアプリ名を入力して対象のワークスペースを選択　> Create App
+Slack API Webサイトへアクセス > Your Apps > ログイン > Create New App > From scratch > App Name に任意のアプリ名を入力して対象のワークスペースを選択　> Create App
  
 **②アプリの権限設定** 
-Settings-Basic Information > Add features and functionality > Permissions > Scopes - Bot Token Scopes > Add an OAuth Scope 押下、以下の選択を繰り返す
+Settings - OAuth & Permissions > Scopes - Bot Token Scopes > Add an OAuth Scope 押下後、以下の選択を繰り返す
 - chat:write
 - chat:write.public
 - files:write
- 
-**③アプリのインストール**
-Features-OAuth & Permissions > Install to Workspace > 許可する > Slackアプリのインストール申請が承認された後、Features-OAuth & Permissions > Install to Workspace > 許可する
-→ Bot User OAuth Token に トークンが表示される。次の工程で使うのでメモ。
+
+![image](https://github.com/user-attachments/assets/109ff27c-0bbe-4e48-a9ed-43ca8579aad1)
+![image](https://github.com/user-attachments/assets/5e48fe4d-44ad-4108-9855-6283049b33e2)
+
+
+ **③アプリのインストール**
+Features-OAuth & Permissions > Install to <ワークスペース名> > 許可する  
+→ OAuth Tokens - Bot User OAuth Token に トークンが表示される (次の工程で使うのでコピーしておく)
  
  
 #### 2.2.3.2. CircleCIの環境変数にSlackアプリのアクセストークンと通知先チャンネルを登録
 ##### 手順
-CircleCIへログイン > [CircleCIのアカウントを作成](#CircleCIのアカウントを作成) で作成した組織を選択 > Projects > [2.2.2. GitHub連携したCircleCIプロジェクトを作成](#222-GitHub連携したCircleCIプロジェクトを作成)で作成したプロジェクトを選択 > Project Settings > Environment Variables より、以下2つの環境変数をそれぞれ登録
- 
+CircleCIへログイン > 事前に作成した組織を選択 > Projects > 事前に作成したプロジェクトを選択 > Project Settings > Environment Variables より、以下2つの環境変数をそれぞれ登録  
+※`.circleci/config.yml`内のSlack Orbが使用します。
+
+
 **Slackアプリのアクセストークン**
  
 項目|値
 ---|---
 Environment Variable Name|SLACK_ACCESS_TOKEN
-Value|[2.2.3.1. 通知先となるSlackチャンネルのワークスペースにSlackアプリを作成](#2231-通知先となるSlackチャンネルのワークスペースにSlackアプリを作成)で作成したアクセストークン
- 
+Value|Slack API のWebサイトで作成したアクセストークン
+
 **Slackチャンネル**
  
 項目|値
@@ -264,10 +287,16 @@ Environment Variable Name|SLACK_DEFAULT_CHANNEL
 Value|Slackのデスクトップアプリ上で、通知先のSlackチャンネルを右クリック > コピー > リンクをコピーで得られるURLの末尾の文字列(多分11文字)
  
 #### 2.2.3.3. 動作確認
-[2.2.2. GitHub連携したCircleCIプロジェクトを作成](#222-GitHub連携したCircleCIプロジェクトを作成)で失敗していたbuild-and-testワークフローを再実行して、Slackチャンネルに通知が届くことを確認する。  
-![circleci-notification](https://github.com/user-attachments/assets/66240bf5-1478-4db1-9e2f-d6c8f206f9e7)
+サンプルプロジェクトをコピーした自身のGitHubリポジトリへ空コミットでpushします。
+```
+git commit --allow-empty -m "空コミット"
+git push origin HEAD:master
+```
 
- 
+設定が正しく行えていれば、Slackチャンネルに以下のようなWorkflowの開始通知が届くはずです。
+![スクリーンショット 2024-09-18 15 05 08](https://github.com/user-attachments/assets/8fe8f68f-ba47-4780-afd2-36aef36fea0c)
+
+
 ### 2.2.4. Terraformを使ってGCPのサービスをプロビジョニングする
 #### 手順
 ローカルマシンのターミナルで以下を実行してください。
@@ -304,7 +333,9 @@ terraform apply
 
 ### 2.2.5. ローカル環境を起動する
 #### 手順
-ローカルマシンのターミナルで以下を実行してください。
+
+①Docker for Desktopを起動します。
+②ローカルマシンのターミナルで以下を実行してください。
 
 ```
 # 1. プロジェクトルートへ移動
@@ -314,11 +345,15 @@ cd <プロジェクトルート>
 make docker-compose-up-d
 
 # 3. 動作確認(Goアプリケーションソースのテスト)
-make docker-go-test
+# 全て?もしくはokならば、正常に動作しています。
+make docker-go-test-serial
 
 # 4. 動作確認(APIへリクエスト)
-grpcurl -d '{"name": "sample1"}' localhost:8080 api.SampleService.CreateSample
+# ランダムなidでレスポンスが返ってきたら正常に動作しています。
+grpcurl -plaintext -d '{"name": "sample1"}' localhost:8080 api.SampleService.CreateSample
 ```
+
+
 
 
 
