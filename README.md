@@ -93,7 +93,7 @@ tfenv use 1.9.1
 **前提** 
 [2.1. 各サービス、ツールの初期設定](#21-各サービス、ツールの初期設定) の作業を終えていることが前提です。
  
-### 2.2.1. GitHubリポジトリの作成と設定
+### 2.2.1. GitHub
 #### 2.2.1.1. リポジトリの作成
 GitHubへログイン > New repository > 以下の設定で Create repository
  
@@ -160,12 +160,69 @@ git remote -v
 git push origin
 ```
  
-#### 2.2.1.3. サンプルプロジェクトの設定を変更
-GCPのプロジェクトID，リージョン、ゾーンの設定を変更します。
+#### 2.2.1.3. terraformの設定を変更
+以下変更して、commit & pushしてください。
 
-<TODO>
+①deploy/terraform/variables.tfを変更します。
 
-####  2.2.1.4. リポジトリの設定を変更
+```
+variable "default_project_id" {
+  type = string
+  description = "各リソースのデフォルトのプロジェクトID"
+  default = "変更必須"
+}
+
+variable "spanner_instance_dev" {
+  description = "Cloud Spannerのインスタンスの設定値"
+  type = object({
+    name = string
+    config = string
+    display_name = string
+    num_nodes = number
+  })
+  default = {
+    # インスタンス名(ID)
+    name = "変更必須"
+    # インスタンス構成
+    config = "regional-us-central1"
+    # 表示名
+    display_name = "変更必須"
+    # ノード数
+    num_nodes = 1
+  }
+}
+
+```
+- default_project_id の defaultを、自身のGCPプロジェクトID(xxxxxxxx-xxxxxx-xxxxxx-xxといったフォーマットのもの)に変更してください。プロジェクトIDは、GCPのWebコンソールから確認できます。
+- spanner_instance_dev の name, display_nameを任意の値に変更してください。迷う場合、とりあえず"<GCPプロジェクト名の一部>-dev"といった形にしておくのが楽です。
+- spanner_database_dev の instance を spanner_instance_dev の nameと同じものに、name を任意の値に変更してください。迷う場合、nameはとりあえず"<Spannerインスタンス名>-1"といった形にしておくと楽です。
+
+②deploy/terraform/backend.tfを変更します。
+
+```
+terraform {
+  backend "gcs" {
+    bucket = "変更必須"
+  }
+}
+
+# tfstateを保存するためのGCSバケット
+resource "google_storage_bucket" "tfstate" {
+  name     = "変更必須"
+  location = var.default_region
+  storage_class = "STANDARD"
+  versioning {
+    enabled = true
+  }
+}
+```
+
+terraform.backend.gcs.bucketと、google_storage_bucket.tfstate.name にあるtfstateファイルの保存先のGCSバケット名を任意の名前に変更します。
+[GCSのバケット名はグローバルでユニークでなければならず、プロジェクトIDとかも入れない方がよい](https://pms-confluence2.banadev.com/confluence/pages/viewpage.action?pageId=1099910187#:~:text=%E4%BF%9D%E5%AD%98%E5%85%88%E3%81%AE%E3%83%90%E3%82%B1%E3%83%83%E3%83%88%E5%90%8D%E3%81%AF%E3%82%B0%E3%83%AD%E3%83%BC%E3%83%90%E3%83%AB%E3%81%A7%E3%83%A6%E3%83%8B%E3%83%BC%E3%82%AF%E3%81%A7%E3%81%AA%E3%81%91%E3%82%8C%E3%81%B0%E3%81%AA%E3%82%89%E3%81%9A%E3%80%81%E3%83%97%E3%83%AD%E3%82%B8%E3%82%A7%E3%82%AF%E3%83%88ID%E3%81%A8%E3%81%8B%E3%82%82%E5%85%A5%E3%82%8C%E3%81%AA%E3%81%84%E6%96%B9%E3%81%8C%E3%82%88%E3%81%84)とのことで、"tfstate-<適当なUUID>"といった形にするのが無難かと思います。
+ 
+
+
+####  2.2.1.4. リポジトリの設定を変更(任意)
 複数人で開発することを想定し、利便性向上、誤操作による復旧の手間を低減するという観点から、以下の項目を設定します。
 - wiki利用可: デフォルト設定で可能
 - masterブランチに対して以下の制限を設定(ブランチ保護ルール)
@@ -197,11 +254,67 @@ Rules|Branch protections|- Require a pull request before merging: true<br>　- R
 - [ウィキについて](https://docs.github.com/github/building-a-strong-community/about-wikis)
 - [プルリクエストを自動的にマージする](https://docs.github.com/ja/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/automatically-merging-a-pull-request)
 - [保護されたブランチについて](https://docs.github.com/ja/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches#restrict-who-can-push-to-matching-branches)
+
+### 2.2.4. Terraformを使ってGCPのサービスをプロビジョニングする
+#### 手順
+ローカルマシンのターミナルで以下を実行してください。
  
+```
+# 1. terraform(Google Cloud SDK を使ったアプリケーション)のための認証
+gcloud auth application-default login
+  
+# 2. ブラウザでGCPプロジェクトを操作するGoogleアカウントにログイン。ログイン後ターミナルを再び操作できるようになる。
+# ブラウザのクッキーを全削除しておかないとうまく動作しないかも
+  
+# 3. terraformのルートモジュールへ移動
+cd deploy/terraform
+  
+# 4. backend.tfのterraformブロックをコメントアウト
+  
+# 5. terraformで必要になるproviderをセットアップ
+terraform init
+  
+# 6. dry run
+terraform plan
+  
+# 7. 適用(tfstateの保存先はローカル)
+terraform apply
+  
+# 8. backend.tfのterraformブロックをコメントアウトを元に戻す
+  
+# 9. dry run
+terraform plan
+  
+# 10. 適用(tfstateの保存先がgcsに)
+terraform apply
+```
+
+補足:  
+
+run.googleaips.comを有効化するとArtifactRegistryのAPIも暗黙的に有効化されるため、Cloud Runのリソースでdepends_on = [google_project_service.gcp_services["run.googleapis.com"]] を施すことで必要なAPIの有効化 → Cloud Runサービスの作成という順序でのリソースの設定を期待しています。
+しかし実際にはうまく機能しないようで、初回の実行ではArgifactRegistryのAPIが有効化されていないというエラーが出力されてしまうかもしれません。
+これはgoogle providerの機能不備だと感じています(google providerに限らずよくあることです)。
+無視して再度`terraform apply`を実行すると成功するはずです。
+
+TODO: イメージが存在しないエラー
+Cloud Runサービスのプロビジョニングでは、リビジョンで使用するイメージの設定が必須になります。
+対象のイメージがGARに存在しない場合、以下のようなエラーが発生します。
+
+```
+Error: Error waiting to create Service: Error waiting for Creating Service: Error code 13, message: Revision 'api-00001-nps' is not ready and cannot serve traffic. Image 'us-central1-docker.pkg.dev/dazzling-pillar-435904-a5/api/sample_app:latest' not found.
+│
+│   with google_cloud_run_v2_service.api,
+│   on main.tf line 18, in resource "google_cloud_run_v2_service" "api":
+│   18: resource "google_cloud_run_v2_service" "api" {
+```
+
+そのため、ダミーのイメージを使ってデプロイ後、CircleCIのmasterブランチへのpushのパイプラインで正式なイメージをビルド&デプロイした後に、再度terraform applyで適用するというめんどくさい工程を取ります。
+
+
 ---
  
-### 2.2.2. GitHub連携したCircleCIプロジェクトを作成
-#### 手順
+### 2.2.2. CircleCI
+#### 2.2.2.1. CircleCIプロジェクトの作成とGitHub連携
 ①CircleCIへログイン > Projects > CreateProject  
 ![circleci_create_project](https://github.com/user-attachments/assets/6d14082a-2159-44b9-9224-a0c50c02bec8)
 
@@ -245,9 +358,8 @@ Rules|Branch protections|- Require a pull request before merging: true<br>　- R
 
 ---
 
-### 2.2.3. CircleCIとSlackを連携
-#### 2.2.3.1. 通知先となるSlackチャンネルのワークスペースにSlackアプリを作成
-##### 手順
+#### 2.2.2.2. CircleCIプロジェクトとSlackを連携
+##### 通知先となるSlackチャンネルのワークスペースにSlackアプリを作成
 **①アプリの作成** 
 Slack API Webサイトへアクセス > Your Apps > ログイン > Create New App > From scratch > App Name に任意のアプリ名を入力して対象のワークスペースを選択　> Create App
  
@@ -266,11 +378,11 @@ Features-OAuth & Permissions > Install to <ワークスペース名> > 許可す
 → OAuth Tokens - Bot User OAuth Token に トークンが表示される (次の工程で使うのでコピーしておく)
  
  
-#### 2.2.3.2. CircleCIの環境変数にSlackアプリのアクセストークンと通知先チャンネルを登録
-##### 手順
-CircleCIへログイン > 事前に作成した組織を選択 > Projects > 事前に作成したプロジェクトを選択 > Project Settings > Environment Variables より、以下2つの環境変数をそれぞれ登録  
-※`.circleci/config.yml`内のSlack Orbが使用します。
+#### 2.2.2.3. CircleCIプロジェクトに環境変数を設定
+CircleCIへログイン > 事前に作成した組織を選択 > Projects > 事前に作成したプロジェクトを選択 > Project Settings > Environment Variables より、それぞれ登録してください。
 
+##### Slack連携関連
+slack Orbが使用します。
 
 **Slackアプリのアクセストークン**
  
@@ -285,7 +397,40 @@ Value|Slack API のWebサイトで作成したアクセストークン
 ---|---
 Environment Variable Name|SLACK_DEFAULT_CHANNEL
 Value|Slackのデスクトップアプリ上で、通知先のSlackチャンネルを右クリック > コピー > リンクをコピーで得られるURLの末尾の文字列(多分11文字)
+
+##### GCP操作関連
+gcp-cli orbが使用します。
+GARへのDockerイメージのPUSHやCloud Runへのデプロイ処理で必要になります。
+
+**GCPサービスアカウントのキー**
  
+項目|値
+---|---
+Environment Variable Name|GCLOUD_SERVICE_KEY
+Value|GCPコンソールで作成したサービスアカウントのキー
+
+**GCPプロジェクトID**
+ 
+項目|値
+---|---
+Environment Variable Name|GOOGLE_PROJECT_ID
+Value||.tfにセットしたXXXX(TODO)の値
+
+**GCPリージョン**
+ 
+項目|値
+---|---
+Environment Variable Name|GOOGLE_COMPUTE_REGION
+Value||.tfにセットしたXXXX(TODO)の値
+
+**GCPゾーン**
+ 
+項目|値
+---|---
+Environment Variable Name|GOOGLE_COMPUTE_ZONE
+Value|.tfにセットしたXXXX(TODO)の値
+
+
 #### 2.2.3.3. 動作確認
 サンプルプロジェクトをコピーした自身のGitHubリポジトリへ空コミットでpushします。
 ```
@@ -296,45 +441,30 @@ git push origin HEAD:master
 設定が正しく行えていれば、Slackチャンネルに以下のようなWorkflowの開始通知が届くはずです。
 ![スクリーンショット 2024-09-18 15 05 08](https://github.com/user-attachments/assets/8fe8f68f-ba47-4780-afd2-36aef36fea0c)
 
+また、すべての工程が成功すると以下のような成功通知が届きます。
+masterブランチへのpushの場合、Cloud Runへのデプロイまで行われます。
+CircleCIでデプロイした場合、デプロイしたリビジョンにcircleci-deployタグが付与されます。
+タグ付きURLを利用して、以下のコマンドで動作確認できます。
 
-### 2.2.4. Terraformを使ってGCPのサービスをプロビジョニングする
-#### 手順
-ローカルマシンのターミナルで以下を実行してください。
- 
 ```
-# 1. terraform(Google Cloud SDK を使ったアプリケーション)のための認証
-gcloud auth application-default login
-  
-# 2. ブラウザでGCPプロジェクトを操作するGoogleアカウントにログイン。ログイン後ターミナルに戻ってくる。
-# ブラウザのクッキーを全削除しておかないとうまく動作しないかも
-  
-# 3. terraformのルートモジュールへ移動
-cd deploy/terraform
-  
-# 4. terraform.backendをコメントアウト
-  
-# 5. terraformで必要になるproviderをセットアップ
-terraform init
-  
-# 6. dry run
-terraform plan
-  
-# 7. 適用(tfstateの保存先はローカル)
-terraform apply
-  
-# 8. terraform.backendコメントアウトを元に戻す
-  
-# 9. dry run
-terraform plan
-  
-# 10. 適用(tfstateの保存先がgcsに)
-terraform apply
+## サンプルデータを追加
+grpcurl  -d '{"name": "sample1"}' circleci-deploy---xxx.a.run.app:443 api.SampleService.CreateSample
+## サンプルデータを更新
+grpcurl -d '{"id": "<サンプルデータ追加時のレスポンスに含まれるID>", "name": "updated-sample1"}' circleci-deploy-xxx.a.run.app:443  api.SampleService.UpdateSample
+## サンプルデータの一覧を取得
+grpcurl -d '{"ids":["<サンプルデータ追加時のレスポンスに含まれるID>"]}' circleci-deploy-xxx.a.run.app:443 api.SampleService.ListSamples
+## サンプルデータを削除
+grpcurl -d '{"id":["<サンプルデータ追加時のレスポンスに含まれるID>"]}' circleci-deploy-xxx.a.run.app:443 api.SampleService.DeleteSample
 ```
+
+xxxは、Cloud Runで発行されたURLからhttps://を削除したものになります。
+
+
+
 
 ### 2.2.5. ローカル環境を起動する
 #### 手順
-
-①Docker for Desktopを起動します。
+①Docker for Desktopを起動します。  
 ②ローカルマシンのターミナルで以下を実行してください。
 
 ```
