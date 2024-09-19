@@ -45,7 +45,7 @@ GCPインフラを構築するGoogleアカウントを用意してください�
 #### gcloud CLIをインストール
 [gcloud CLIをインストールする](https://cloud.google.com/sdk/docs/install?hl=ja)に従ってインストールしてください。
 
-### 2.1.3. Go
+### 2.1.3. grpcurl
 <TODO>
  
 ### 2.1.4. CircleCI
@@ -66,7 +66,6 @@ GitHubやCircleCIからの通知先となるワークスペース、チャンネ
  
 ### 2.1.6. Docker
 [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/)からDocker for Desktopをインストールしてください。
-
 
 ### 2.1.7. Terraform
 #### Terraformをインストール
@@ -222,43 +221,11 @@ terraform.backend.gcs.bucketと、google_storage_bucket.tfstate.name にあるtf
  
 
 
-####  2.2.1.4. リポジトリの設定を変更(任意)
-複数人で開発することを想定し、利便性向上、誤操作による復旧の手間を低減するという観点から、以下の項目を設定します。
-- wiki利用可: デフォルト設定で可能
-- masterブランチに対して以下の制限を設定(ブランチ保護ルール)
-    - force pushを許可しない
-    - 他のブランチをマージする前にPR必須にする
-    - マージするブランチ側でのテスト必須にする
- 
-
-※Freeプランかつ、Privateリポジトリにする場合は、このリポジトリの保護ルールは適用できないため無視してください。
-##### 手順
-①GitHubへログイン > 対象のリポジトリのSettings > Code and automation - Rules - Rulesetsで New ruleset  > New branch ruleset
-→以下の画面が表示されます。
- 
-![image2024-7-5_16-49-30-](https://github.com/user-attachments/assets/f386aa20-b93f-4e6c-89d5-e3f811fb0a05)
-
- 
-②各項目を以下の通り設定してCreate押下
-項目|　|値|補足
----|---|---|---
-RulesetName| |任意のブランチ保護ルール名|ブランチ保護ルールを管理する上での名前。"masterブランチ"などわかりやすいものを設定。
-Enforcement status| |Atcive|このブランチ保護ルールを適用するか否か
-Targets|Target branches|master|ブランチ保護ルールを適用するブランチ名のパターン。Include by patternから設定
-Rules|Branch protections|- Require a pull request before merging: true<br>　- Required approvals: 1<br>　- Dismiss stale pull request approvals when new commits are pushed: true<br>　- Require approval of the most recent reviewable push: false<br>　- Require conversation resolution before merging: false<br>|- マージ前のPR必須にするか<br>　- 必須のapprove数<br>　- approve後にpushがあった場合、過去のapproveを却下する<br>　- 直近のレビュー可能なpushのapproveを必須にするか<br>　 - マージ前の会話の解決を必須にするか<br>
-　|　|- Require status checks to pass: true<br>　- Require branches to be up to date before merging: true<br>　- ci/circleci: build-and-test|- マージしようとしているブランチのステータスチェック通過を必須にするか<br>　- 最新のコードでチェックしなければならないか(後述のCircleCIとGitHubの連携設定が終わった後でないと設定不可)<br>　 
-　|　|Block force pushes: true|
- 
-##### 参考 
-- [プランと請求日を表示する](https://docs.github.com/ja/billing/managing-your-github-billing-settings/viewing-your-subscriptions-and-billing-date)
-- [ウィキについて](https://docs.github.com/github/building-a-strong-community/about-wikis)
-- [プルリクエストを自動的にマージする](https://docs.github.com/ja/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/automatically-merging-a-pull-request)
-- [保護されたブランチについて](https://docs.github.com/ja/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches#restrict-who-can-push-to-matching-branches)
-
 ### 2.2.4. Terraformを使ってGCPのサービスをプロビジョニングする
 #### 手順
 ローカルマシンのターミナルで以下を実行してください。
- 
+
+
 ```
 # 1. terraform(Google Cloud SDK を使ったアプリケーション)のための認証
 gcloud auth application-default login
@@ -271,45 +238,48 @@ cd deploy/terraform
   
 # 4. backend.tfのterraformブロックをコメントアウト
   
-# 5. terraformで必要になるproviderをセットアップ
+# 5. terraform初期化
 terraform init
+
+# 6. プロジェクトルートへ移動
+cd ../..
+
+# 7. イメージをビルド
+docker build -f build/packages/docker/Dockerfile.sample_app -t us-central1-docker.pkg.dev/<GCPのプロジェクトID>/api/sample_app .
+
+# 8. ~/.docker/config.json の credHelper へ設定(指定したArtifact Registryのホストでgcloudの認証情報を使う)を追加
+gcloud auth configure-docker us-central1-docker.pkg.dev
+
+# 9. GARの操作権限を持つGoogleアカウントでgcloudコマンド向けにログイン
+gcloud auth login <Googleアカウント(xxxx@gmail.com)>
+
+# 10. GARへdockerコマンド向けにログイン
+docker login us-central1-docker.pkg.dev
+
+# 11. GARのリポジトリへイメージをpush
+docker push us-central1-docker.pkg.dev/<GCPのプロジェクトID>/api/sample_app
+
+# 12. main.tf の google_cloud_run_v2_service.apiブロックと google_cloud_run_v2_service_iam_binding.api_all_usersブロックをコメントアウト  
   
-# 6. dry run
-terraform plan
-  
-# 7. 適用(tfstateの保存先はローカル)
+# 13. 適用(tfstateの保存先はローカル)
 terraform apply
   
-# 8. backend.tfのterraformブロックをコメントアウトを元に戻す
-  
-# 9. dry run
-terraform plan
-  
-# 10. 適用(tfstateの保存先がgcsに)
+# 14. backend.tfのterraformブロック、main.tfのgoogle_cloud_run_v2_service.apiブロック、google_cloud_run_v2_service_iam_binding.api_all_usersブロックのコメントアウトを元に戻す
+
+# 15. terraform初期化(tfstateの保存先を変える際に必要になる)
+terraform init
+
+# 16. 適用(tfstateの保存先がgcsになり、Cloud Run系の設定も反映される)
 terraform apply
 ```
 
-補足:  
-
+**補足**  
 run.googleaips.comを有効化するとArtifactRegistryのAPIも暗黙的に有効化されるため、Cloud Runのリソースでdepends_on = [google_project_service.gcp_services["run.googleapis.com"]] を施すことで必要なAPIの有効化 → Cloud Runサービスの作成という順序でのリソースの設定を期待しています。
 しかし実際にはうまく機能しないようで、初回の実行ではArgifactRegistryのAPIが有効化されていないというエラーが出力されてしまうかもしれません。
 これはgoogle providerの機能不備だと感じています(google providerに限らずよくあることです)。
 無視して再度`terraform apply`を実行すると成功するはずです。
 
-TODO: イメージが存在しないエラー
-Cloud Runサービスのプロビジョニングでは、リビジョンで使用するイメージの設定が必須になります。
-対象のイメージがGARに存在しない場合、以下のようなエラーが発生します。
-
-```
-Error: Error waiting to create Service: Error waiting for Creating Service: Error code 13, message: Revision 'api-00001-nps' is not ready and cannot serve traffic. Image 'us-central1-docker.pkg.dev/dazzling-pillar-435904-a5/api/sample_app:latest' not found.
-│
-│   with google_cloud_run_v2_service.api,
-│   on main.tf line 18, in resource "google_cloud_run_v2_service" "api":
-│   18: resource "google_cloud_run_v2_service" "api" {
-```
-
-そのため、ダミーのイメージを使ってデプロイ後、CircleCIのmasterブランチへのpushのパイプラインで正式なイメージをビルド&デプロイした後に、再度terraform applyで適用するというめんどくさい工程を取ります。
-
+イメージのpushを別途していることについては、[[GCP][Terraform]Cloud Run + Artifact Registryの初期インフラ構築でぶつかった問題](https://qiita.com/WisteriaWave/items/9f4bba23a8cbee5ae70d)を参照してください
 
 ---
  
@@ -407,28 +377,28 @@ GARへのDockerイメージのPUSHやCloud Runへのデプロイ処理で必要�
 項目|値
 ---|---
 Environment Variable Name|GCLOUD_SERVICE_KEY
-Value|GCPコンソールで作成したサービスアカウントのキー
+Value|GCPコンソールでサービスアカウント(`circleci@<プロジェクトID>.iam.gserviceaccount.com`)のキーを発行(JSON形式)して、中身をコピー&ペーストしてください。
 
 **GCPプロジェクトID**
  
 項目|値
 ---|---
 Environment Variable Name|GOOGLE_PROJECT_ID
-Value||.tfにセットしたXXXX(TODO)の値
+Value|variables.tfにセットしたdefault_project_idの値
 
 **GCPリージョン**
  
 項目|値
 ---|---
 Environment Variable Name|GOOGLE_COMPUTE_REGION
-Value||.tfにセットしたXXXX(TODO)の値
+Value|variables.tfにセットしたdefault_regionの値
 
 **GCPゾーン**
  
 項目|値
 ---|---
 Environment Variable Name|GOOGLE_COMPUTE_ZONE
-Value|.tfにセットしたXXXX(TODO)の値
+Value|variables.tfにセットしたdefault_zoneの値
 
 
 #### 2.2.3.3. 動作確認
@@ -458,8 +428,6 @@ grpcurl -d '{"id":["<サンプルデータ追加時のレスポンスに含ま�
 ```
 
 xxxは、Cloud Runで発行されたURLからhttps://を削除したものになります。
-
-
 
 
 ### 2.2.5. ローカル環境を起動する
