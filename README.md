@@ -418,16 +418,17 @@ CircleCIでデプロイした場合、デプロイしたリビジョンにcircle
 
 ```
 ## サンプルデータを追加
-grpcurl  -d '{"name": "sample1"}' circleci-deploy---xxx.a.run.app:443 api.SampleService.CreateSample
+grpcurl  -d '{"name": "sample1"}' circleci-deploy---xxx:443 api.SampleService.CreateSample
 ## サンプルデータを更新
-grpcurl -d '{"id": "<サンプルデータ追加時のレスポンスに含まれるID>", "name": "updated-sample1"}' circleci-deploy-xxx.a.run.app:443  api.SampleService.UpdateSample
+grpcurl -d '{"id": "<サンプルデータ追加時のレスポンスに含まれるID>", "name": "updated-sample1"}' circleci-deploy-xxx:443  api.SampleService.UpdateSample
 ## サンプルデータの一覧を取得
-grpcurl -d '{"ids":["<サンプルデータ追加時のレスポンスに含まれるID>"]}' circleci-deploy-xxx.a.run.app:443 api.SampleService.ListSamples
+grpcurl -d '{"ids":["<サンプルデータ追加時のレスポンスに含まれるID>"]}' circleci-deploy-xxx:443 api.SampleService.ListSamples
 ## サンプルデータを削除
-grpcurl -d '{"id":["<サンプルデータ追加時のレスポンスに含まれるID>"]}' circleci-deploy-xxx.a.run.app:443 api.SampleService.DeleteSample
+grpcurl -d '{"id":["<サンプルデータ追加時のレスポンスに含まれるID>"]}' circleci-deploy-xxx:443 api.SampleService.DeleteSample
 ```
 
-xxxは、Cloud Runで発行されたURLからhttps://を削除したものになります。
+`xxx`は、Cloud Runで発行されたURLから`https://`を削除したものになります。
+`https://api-123456789012.us-central1.run.app` の場合、`api-123456789012.us-central1.run.app`
 
 
 ### 2.2.5. ローカル環境を起動する
