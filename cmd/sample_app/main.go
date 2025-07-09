@@ -7,6 +7,9 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 )
 
 func main() {
@@ -15,6 +18,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to LoadEnvironmentVariables(): %v", err)
 	}
+
+	// プロパゲーターのセットアップをコール
+	prop := newPropagator()
+	otel.SetTextMapPropagator(prop)
 
 	// インフラ層のインスタンスを生成
 	infrastructures, err := createInfrastructuresWithGORMSpanner(
@@ -70,4 +77,12 @@ func startGrpcServer(port int, presentations *presentations) error {
 		return fmt.Errorf("failed to grpcServer.Serve(): %w", err)
 	}
 	return nil
+}
+
+// プロパゲーターのセットアップ
+func newPropagator() propagation.TextMapPropagator {
+	return propagation.NewCompositeTextMapPropagator(
+		propagation.TraceContext{},
+		propagation.Baggage{},
+	)
 }
