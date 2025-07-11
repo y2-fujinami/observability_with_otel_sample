@@ -13,10 +13,11 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
+	"go.opentelemetry.io/otel/semconv/v1.26.0"
 )
 
 // TODO
-serviceName := semconv.ServiceNameKey.String("observability-with-otel-sample")
+var serviceName = semconv.ServiceNameKey.String("observability-with-otel-sample")
 
 func main() {
 	// TODO 
@@ -118,7 +119,7 @@ func newOtelCollectorConn(collectorHost string) (*grpc.ClientConn, error) {
 }
 
 // リソースのセットアップ
-func newResource(ctx context.Context) resource.Resource {
+func newResource(ctx context.Context) (*resource.Resource, error) {
 	res, err := resource.New(ctx,
 		resource.WithAttributes(serviceName),
 	)
