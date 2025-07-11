@@ -26,6 +26,7 @@ docker-compose-up-d:
 	docker compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} up -d
 	# ヘルスチェックは起動時のみに行うため削除
 	make docker-compose-down-spanner-emulator-healthcheck
+	make docker-compose-down-otel-collector-healthcheck
 	make docker-compose-down-api-healthcheck
 # 全コンテナを削除
 docker-compose-down:
@@ -36,6 +37,9 @@ docker-compose-down-spanner-emulator:
 # spanner-emulator-healthcheckコンテナのみを削除
 docker-compose-down-spanner-emulator-healthcheck:
 	docker compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} rm -fsv spanner-emulator-healthcheck
+# otel-collcector-healthcheckコンテナのみを削除
+docker-compose-down-otel-collector-healthcheck:
+	docker compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} rm -fsv otel-collector-healthcheck	
 # api-healthcheckコンテナのみを削除
 docker-compose-down-api-healthcheck:
 	docker compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} rm -fsv api-healthcheck

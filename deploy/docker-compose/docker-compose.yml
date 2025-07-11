@@ -35,6 +35,33 @@ services:
       retries: 10
       start_period: 10s
 
+  # OpenTelemetry Collector
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.126.0
+    command: ["--config=/etc/otel-collector.yaml"]
+    volumes:
+      - type: bind
+        source: ../../build/packages/otel_collector/otel-collector.yaml
+        target: /etc/otel-collector.yaml
+    ports:
+      - 4317:4317
+      - 13133:13133 # health_check extension 
+      - 55679:55679 # zpages extension
+
+  # OpenTelemetry Collectorのヘルスチェック用コンテナ
+  otel-collector-healthcheck:
+    image: curlimages/curl
+    depends_on:
+      - otel-collector
+    platform: linux/amd64
+    entrypoint: tail -f /dev/null
+    healthcheck:
+      test: curl ${OTEL_COLLECTOR_HOST_HEALTH_CHECK}
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 10s
+
   # GoアプリケーションのAPIサーバ
   api:
     build:
