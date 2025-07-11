@@ -6,6 +6,7 @@ import (
 	"net"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 
 	"go.opentelemetry.io/otel"
@@ -22,6 +23,12 @@ func main() {
 	// プロパゲーターのセットアップをコール
 	prop := newPropagator()
 	otel.SetTextMapPropagator(prop)
+
+	// Otel コレクターへのコネクションのセットアップ
+	otelConn, err := newOtelCollectorConn(envVars.OtelCollectorHost)
+	if err != nil {
+		log.Fatalf("failed to newOtelCollectorConn(): %v", err)
+	}
 
 	// インフラ層のインスタンスを生成
 	infrastructures, err := createInfrastructuresWithGORMSpanner(
@@ -85,4 +92,13 @@ func newPropagator() propagation.TextMapPropagator {
 		propagation.TraceContext{},
 		propagation.Baggage{},
 	)
+}
+
+// Otel コレクターへのコネクションのセットアップ
+func newOtelCollectorConn(collectorHost string) (*grpc.ClientConn, error) {
+	conn, err := grpc.NewClient(collectorHost, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, fmt.Errorf("failed to grpc.NewClient(): %w", err)
+	}
+	return conn, nil
 }

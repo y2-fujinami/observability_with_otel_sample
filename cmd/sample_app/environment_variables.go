@@ -17,6 +17,8 @@ type EnvironmentVariables struct {
 	SpannerInstanceID string `envconfig:"SPANNER_INSTANCE_ID"`
 	// SpannerDatabaseID SpannerデータベースID
 	SpannerDatabaseID string `envconfig:"SPANNER_DATABASE_ID"`
+	// OtelCollectorHost OpenTelemetry Collector のホスト
+	OtelCollectorHost string `envconfig:"OTEL_COLLECTOR_HOST"`
 }
 
 // LoadEnvironmentVariables 環境変数を読み込む
@@ -44,6 +46,9 @@ func (e *EnvironmentVariables) validate() error {
 	}
 	if e.SpannerDatabaseID == "" {
 		return errors.New("environment variable SpannerDatabaseID is empty")
+	}
+	if e.OtelCollectorHost == "" {
+		return errors.New("environment variable OtelCollectorHost is empty")
 	}
 	return nil
 }
