@@ -16,29 +16,29 @@ docker-compose-full-reload: docker-compose-down docker-compose-build docker-comp
 docker-compose-full-reload-d: docker-compose-down docker-compose-build docker-compose-up-d
 # 全コンテナイメージのビルド
 docker-compose-build:
-	docker-compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} build --no-cache
+	docker compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} build --no-cache
 # 全コンテナを起動
 docker-compose-up:
-	docker-compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} up
+	docker compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} up
 	# コンテナをバックグラウンドで起動しない場合、ヘルスチェック用コンテナを落とすためのコマンドは実行不可能
 # 全コンテナをバックグラウンドで起動
 docker-compose-up-d:
-	docker-compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} up -d
+	docker compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} up -d
 	# ヘルスチェックは起動時のみに行うため削除
 	make docker-compose-down-spanner-emulator-healthcheck
 	make docker-compose-down-api-healthcheck
 # 全コンテナを削除
 docker-compose-down:
-	docker-compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} down
+	docker compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} down
 # spanner-emulatorコンテナのみを削除
 docker-compose-down-spanner-emulator:
-	docker-compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} rm -fsv spanner-emulator
+	docker compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} rm -fsv spanner-emulator
 # spanner-emulator-healthcheckコンテナのみを削除
 docker-compose-down-spanner-emulator-healthcheck:
-	docker-compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} rm -fsv spanner-emulator-healthcheck
+	docker compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} rm -fsv spanner-emulator-healthcheck
 # api-healthcheckコンテナのみを削除
 docker-compose-down-api-healthcheck:
-	docker-compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} rm -fsv api-healthcheck
+	docker compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} rm -fsv api-healthcheck
 # 全コンテナの状態を表示
 docker-compose-ps:
 	watch -n 0.05 'docker-compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} ps -a --format "table {{.Service}}\t{{.Status}}"'
@@ -46,16 +46,16 @@ docker-compose-ps:
 # CircleCI用のdocker-composeコマンドエイリアス
 # 全コンテナをバックグラウンドで起動
 docker-compose-circleci-up-d:
-	docker-compose -f ${circleci-docker-compose-file} -p ${local-dev-env-docker-compose-project} up -d
+	docker compose -f ${circleci-docker-compose-file} -p ${local-dev-env-docker-compose-project} up -d
 	# ヘルスチェックは起動時のみに行うため削除
-	docker-compose -f ${circleci-docker-compose-file} -p ${local-dev-env-docker-compose-project} rm -fsv spanner-emulator-healthcheck
-	docker-compose -f ${circleci-docker-compose-file} -p ${local-dev-env-docker-compose-project} rm -fsv api-healthcheck
+	docker compose -f ${circleci-docker-compose-file} -p ${local-dev-env-docker-compose-project} rm -fsv spanner-emulator-healthcheck
+	docker compose -f ${circleci-docker-compose-file} -p ${local-dev-env-docker-compose-project} rm -fsv api-healthcheck
 # 全コンテナを削除
 docker-compose-circleci-down:
-	docker-compose -f ${circleci-docker-compose-file} -p ${local-dev-env-docker-compose-project} down
+	docker compose -f ${circleci-docker-compose-file} -p ${local-dev-env-docker-compose-project} down
 # 全コンテナの状態を表示
 docker-compose-circleci-ps:
-	watch -n 0.05 'docker-compose -f ${circleci-docker-compose-file} -p ${local-dev-env-docker-compose-project} ps -a --format "table {{.Service}}\t{{.Status}}"'
+	watch -n 0.05 'docker compose -f ${circleci-docker-compose-file} -p ${local-dev-env-docker-compose-project} ps -a --format "table {{.Service}}\t{{.Status}}"'
 
 
 # dockerコマンドエイリアス
