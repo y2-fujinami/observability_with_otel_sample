@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
@@ -14,6 +15,9 @@ import (
 )
 
 func main() {
+	// TODO 
+	ctx := context.Background()
+
 	// 環境変数を読み込む
 	envVars, err := LoadEnvironmentVariables()
 	if err != nil {
