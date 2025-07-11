@@ -33,7 +33,7 @@
 
 
 # Goアプリケーションをビルドして実行
-FROM golang:1.21.1
+FROM golang:1.23.2
 
 # モックモジュールのインストール(実装作業に必要なものであり、アプリケーションのビルドに必要なものではない)
 RUN go install go.uber.org/mock/mockgen@latest
