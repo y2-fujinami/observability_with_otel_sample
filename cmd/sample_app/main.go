@@ -12,7 +12,11 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/sdk/resource"
 )
+
+// TODO
+serviceName := semconv.ServiceNameKey.String("observability-with-otel-sample")
 
 func main() {
 	// TODO 
@@ -32,6 +36,12 @@ func main() {
 	otelConn, err := newOtelCollectorConn(envVars.OtelCollectorHost)
 	if err != nil {
 		log.Fatalf("failed to newOtelCollectorConn(): %v", err)
+	}
+
+	// リソースのセットアップ
+	res, err := newResource(ctx)
+	if err != nil {
+		log.Fatal("failed to newResource(): %v", err)
 	}
 
 	// インフラ層のインスタンスを生成
@@ -105,4 +115,15 @@ func newOtelCollectorConn(collectorHost string) (*grpc.ClientConn, error) {
 		return nil, fmt.Errorf("failed to grpc.NewClient(): %w", err)
 	}
 	return conn, nil
+}
+
+// リソースのセットアップ
+func newResource(ctx context.Context) resource.Resource {
+	res, err := resource.New(ctx,
+		resource.WithAttributes(serviceName),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resource.WithAttributes(): %w", err)
+	}
+	return res, nil
 }
