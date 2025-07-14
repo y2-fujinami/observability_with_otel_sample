@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"slices"
 
 	"github.com/kelseyhightower/envconfig"
 )
@@ -19,6 +20,10 @@ type EnvironmentVariables struct {
 	SpannerDatabaseID string `envconfig:"SPANNER_DATABASE_ID"`
 	// OtelCollectorHost OpenTelemetry Collector のホスト
 	OtelCollectorHost string `envconfig:"OTEL_COLLECTOR_HOST"`
+	// Environment 環境(ローカル / 本番)
+	Environment string `envconfig:"ENVIRONMENT"`
+	// UseOtelStdExporter 標準出力へテレメトリーデータを出力するか
+	UseOtelStdoutExporter bool `envconfig:"USE_OTEL_STDOUT_EXPORTER"`
 }
 
 // LoadEnvironmentVariables 環境変数を読み込む
@@ -50,5 +55,10 @@ func (e *EnvironmentVariables) validate() error {
 	if e.OtelCollectorHost == "" {
 		return errors.New("environment variable OtelCollectorHost is empty")
 	}
+	collectEnvs := []string{"local", "prod"}
+	if !slices.Contains(collectEnvs, e.Environment) {
+		return errors.New("environment variable Environment is not collect")
+	}
+
 	return nil
 }
