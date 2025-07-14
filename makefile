@@ -17,6 +17,9 @@ docker-compose-full-reload-d: docker-compose-down docker-compose-build docker-co
 # 全コンテナイメージのビルド
 docker-compose-build:
 	docker compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} build --no-cache
+# アプリケーションコンテナイメージのみビルド
+docker-compose-build-api:
+	docker compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} build --no-cache api
 # 全コンテナを起動
 docker-compose-up:
 	docker compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} up
@@ -45,7 +48,10 @@ docker-compose-down-api-healthcheck:
 	docker compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} rm -fsv api-healthcheck
 # 全コンテナの状態を表示
 docker-compose-ps:
-	watch -n 0.05 'docker-compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} ps -a --format "table {{.Service}}\t{{.Status}}"'
+	watch -n 0.05 'docker compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} ps -a --format "table {{.Service}}\t{{.Status}}"'
+# コレクターコンテナの標準出力をリアルタイム表示
+docker-compose-logs-collector:
+	docker compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} logs -f otel-collector
 
 # CircleCI用のdocker-composeコマンドエイリアス
 # 全コンテナをバックグラウンドで起動
