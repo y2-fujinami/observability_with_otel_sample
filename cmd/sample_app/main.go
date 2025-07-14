@@ -9,10 +9,14 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
-
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
+	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/log/global"
 	"go.opentelemetry.io/otel/propagation"
+	sdklog "go.opentelemetry.io/otel/sdk/log"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/semconv/v1.26.0"
@@ -46,6 +50,39 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to newResource(): %v", err) // TODO 終了しなくていいんだっけ？
 	}
+
+	// トレーサープロバイダのセットアップ
+	shutdownTracerProvider, err := initTracerProvider(ctx, res, otelConn)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		if err := shutdownTracerProvider(ctx); err != nil {
+			log.Fatalf("failed to shutdown TracerProvider: %s", err)
+		}
+	}()
+
+	// ロガープロバイダのセットアップ
+	shutDownloggerProvider, err := initLoggerProvider(ctx, res, otelConn)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		if err := shutDownloggerProvider(ctx); err != nil {
+			log.Fatalf("failed to shutdown LoggerProvider: %s", err)
+		}
+	}()
+
+	// メータープロバイダのセットアップ
+	shutdownMeterProvider, err := initMeterProvider(ctx, res, otelConn)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		if err := shutdownMeterProvider(ctx); err != nil {
+			log.Fatalf("failed to shutdown MeterProvider: %s", err)
+		}
+	}()
 
 	// インフラ層のインスタンスを生成
 	infrastructures, err := createInfrastructuresWithGORMSpanner(
@@ -111,7 +148,7 @@ func newPropagator() propagation.TextMapPropagator {
 	)
 }
 
-// Otel コレクターへのコネクションのセットアップ
+// Otel コレクターへのコネクションのセットアップ (トレーサープロバイダ、ロガープロバイダ、メータープロバイダ共通で使う)
 func newOtelCollectorConn(collectorHost string) (*grpc.ClientConn, error) {
 	conn, err := grpc.NewClient(collectorHost, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -149,4 +186,36 @@ func initTracerProvider(ctx context.Context, res *resource.Resource, conn *grpc.
 	return tracerProvider.Shutdown, nil
 }
 
-// 
+// ロガープロバイダのセットアップ
+func initLoggerProvider(ctx context.Context, res *resource.Resource, conn *grpc.ClientConn) (func(context.Context) error, error) {
+	logExporter, err := otlploggrpc.New(ctx, otlploggrpc.WithGRPCConn(conn))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create  exporter: %w", err)
+	}
+
+	loggerProvider := sdklog.NewLoggerProvider(
+		sdklog.WithProcessor(sdklog.NewBatchProcessor(logExporter)),
+		sdklog.WithResource(res),
+	)
+		
+	global.SetLoggerProvider(loggerProvider)
+
+	return loggerProvider.Shutdown, nil
+}
+
+
+// メータープロバイダのセットアップ
+func initMeterProvider(ctx context.Context, res *resource.Resource, conn *grpc.ClientConn) (func(context.Context) error, error) {
+	metricExporter, err := otlpmetricgrpc.New(ctx, otlpmetricgrpc.WithGRPCConn(conn))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create metrics exporter: %w", err)
+	}
+
+	meterProvider := sdkmetric.NewMeterProvider(
+		sdkmetric.WithReader(sdkmetric.NewPeriodicReader(metricExporter)),
+		sdkmetric.WithResource(res),
+	)
+	otel.SetMeterProvider(meterProvider)
+
+	return meterProvider.Shutdown, nil
+}
