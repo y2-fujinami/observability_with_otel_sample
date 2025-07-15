@@ -49,6 +49,9 @@ docker-compose-down-api-healthcheck:
 # 全コンテナの状態を表示
 docker-compose-ps:
 	watch -n 0.05 'docker compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} ps -a --format "table {{.Service}}\t{{.Status}}"'
+# api コンテナの標準出力をリアルタイム表示
+docker-compose-logs-api:
+	docker compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} logs -f api
 # コレクターコンテナの標準出力をリアルタイム表示
 docker-compose-logs-collector:
 	docker compose -f ${local-dev-env-docker-compose-file} -p ${local-dev-env-docker-compose-project} logs -f otel-collector
