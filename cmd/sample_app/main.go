@@ -10,9 +10,13 @@ import (
 	"os/signal"
 	"time"
 
+	rand "math/rand/v2"
+
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/status" 
 	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -61,43 +65,6 @@ func main() {
 		log.Fatalln(err)
 	}()
 
-	// テスト
-	name := "go.opentelemetry.io/contrib/examples/otel-collector"
-	tracer := otel.Tracer(name)
-	meter := otel.Meter(name)
-	logger := otelslog.NewLogger(name)
-
-	// Attributes represent additional key-value descriptors that can be bound
-	// to a metric observer or recorder.
-	commonAttrs := []attribute.KeyValue{
-		attribute.String("attrA", "chocolate"),
-		attribute.String("attrB", "raspberry"),
-		attribute.String("attrC", "vanilla"),
-	}
-
-	runCount, err := meter.Int64Counter("run", metric.WithDescription("The number of times the iteration ran"))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Work begins
-	ctx, span := tracer.Start(
-		ctx,
-		"CollectorExporter-Example",
-		trace.WithAttributes(commonAttrs...))
-	defer span.End()
-	for i := 0; i < 10; i++ {
-		_, iSpan := tracer.Start(ctx, fmt.Sprintf("Sample-%d", i))
-		runCount.Add(ctx, 1, metric.WithAttributes(commonAttrs...))
-		msg := fmt.Sprintf("Doing really hard work (%d / 10)\n", i+1)
-		logger.InfoContext(ctx, msg)
-
-		<-time.After(time.Second)
-		iSpan.End()
-	}
-
-	log.Printf("Done!")
-
 	// インフラ層のインスタンスを生成
 	infrastructures, err := createInfrastructuresWithGORMSpanner(
 		envVars.GCPProjectID,
@@ -138,7 +105,7 @@ func startGrpcServer(port int, presentations *presentations) error {
 
 	// 2. gRPCサーバのインスタンスを生成
 	// (grpc.Serverインスタンスのポインタが返ってくる)
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(randProcStatusInterceptor))
 
 	// 3. gRPCサーバにサービスを登録
 	presentations.registerProtocServices(grpcServer)
@@ -320,4 +287,93 @@ func initMeterProvider(ctx context.Context, res *resource.Resource, conn *grpc.C
 	otel.SetMeterProvider(meterProvider)
 
 	return meterProvider.Shutdown, nil
+}
+
+// 処理ステータス
+type procState int
+const (
+	// エラー
+	procStateError procState = iota
+	// 高レイテンシー
+	procStateHighLatency
+	// 正常
+	procStateNormal
+	// 未定義
+	procStateNone
+)
+
+// 等確率で処理ステータス(エラー/高レイテンシー/正常)
+func randProcStatus() procState {
+	switch rand.IntN(3) {
+	case 0:
+		return procStateError
+	case 1:
+		return procStateHighLatency
+	case 2:
+		return procStateNormal
+	default:
+		return procStateNone
+	}
+}
+
+// リクエストされたメソッド実行前に処理ステータス(エラー/高レイテンシー/正常)を確率で決定し、処理ステータスに応じて以降の処理を制御するインターセプター
+// 1. スパンをこの関数単位で作成する。
+// 2. 処理ステータスをランダムに決定する。
+// 3. 処理ステータスに応じて以下の処理を実行する。
+//   - 処理ステータスがエラー: ログレベル Error で処理ステータスがエラーだったことをログ出力、メトリクスとしてカウントして Internal エラーでレスポンスを返す
+//   - 処理ステータスが高レイテンシー: 一定時間待った後、ログレベル Info で処理ステータスが高レイテンシーだったことをログ出力、メトリクスとしてカウントして処理を続行する
+//   - 処理ステータスが正常: ログレベル Info で処理ステータスが正常だったことをログ出力、メトリクスとしてカウントして処理を続行する
+func randProcStatusInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (res interface{}, err error) {
+	scopeName := "randProcStatusInterceptor" // TODO 計装スコープ名のセマンティック規約意識
+	// テスト的に各テレメトリーデータに共通で仕込むプロパティ
+	commonAttrs := []attribute.KeyValue{
+		attribute.String("attrA", "chocolate"),
+		attribute.String("attrB", "raspberry"),
+		attribute.String("attrC", "vanilla"),
+	}
+
+	logger := otelslog.NewLogger(scopeName)	
+	tracer := otel.Tracer(scopeName)
+	meter := otel.Meter(scopeName)
+	
+	ctx, span := tracer.Start(
+		ctx,
+		"randProcStatusInterceptor", // TODO スパン名のセマンティック規約意識
+		trace.WithAttributes(commonAttrs...))
+	defer span.End()
+
+	errCount, err := meter.Int64Counter("procStateError", metric.WithDescription("procStateError count"))
+	if err != nil {
+		err = status.Error(codes.Internal, "failed to meter.Int64Counter") // TODO エラーハンドリング
+		return
+	}
+
+	highLatencyCount, err := meter.Int64Counter("procStateHighLatency", metric.WithDescription("procStateHighLatency count"))
+	if err != nil {
+		err = status.Error(codes.Internal, "failed to meter.Int64Counter") // TODO エラーハンドリング
+		return
+	}
+
+	normalCount, err := meter.Int64Counter("procStateNormal", metric.WithDescription("procStateNormal count"))
+	if err != nil {
+		err = status.Error(codes.Internal, "failed to meter.Int64Counter") // TODO エラーハンドリング
+		return
+	}
+
+	switch randProcStatus() {
+	case procStateError:
+		logger.ErrorContext(ctx, "procState is error") // otel 的には log.SeverityError 扱いになる
+		errCount.Add(ctx, 1, metric.WithAttributes(commonAttrs...))
+		err = status.Error(codes.Internal, "error occurred randomly")
+	case procStateHighLatency:
+		<-time.After(2*time.Second)
+		logger.InfoContext(ctx, "procState is highLatency. 2 second waited")
+		highLatencyCount.Add(ctx, 1, metric.WithAttributes(commonAttrs...))
+		res, err = handler(ctx, req)		
+	default:
+		logger.InfoContext(ctx, "procState is normal")
+		normalCount.Add(ctx, 1, metric.WithAttributes(commonAttrs...))
+		res, err = handler(ctx, req)
+	}
+	return
 }
