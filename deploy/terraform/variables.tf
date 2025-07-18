@@ -1,7 +1,7 @@
 variable "default_project_id" {
   type = string
   description = "各リソースのデフォルトのプロジェクトID"
-  default = "変更必須"
+  default = "y2-fujinami-study"
 }
 variable "default_region" {
   type = string
@@ -53,11 +53,11 @@ variable "spanner_instance_dev" {
   })
   default = {
     # インスタンス名(ID)
-    name = "変更必須"
+    name = "y2-fujinami-study-dev"
     # インスタンス構成
     config = "regional-us-central1"
     # 表示名
-    display_name = "変更必須"
+    display_name = "y2-fujinami-study-dev"
     # ノード数
     num_nodes = 1
   }
@@ -71,8 +71,8 @@ variable "spanner_database_dev" {
   })
   default = {
     # インスタンス名(ID)
-    instance = "変更必須"
+    instance = "y2-fujinami-study-dev"
     # データベース名(ID)
-    name = "変更必須"
+    name = "y2-fujinami-study-dev-1"
   }
 }
