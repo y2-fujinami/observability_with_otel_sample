@@ -1,12 +1,12 @@
 terraform {
   backend "gcs" {
-    bucket = "tfstate-94696b5b-d077-4c53-a0be-7dbac69be4b7"
+    bucket = "tfstate-f8d77d8a-b043-1085-af22-6f6faa5217b9"
   }
 }
 
 # tfstateを保存するためのGCSバケット
 resource "google_storage_bucket" "tfstate" {
-  name     = "tfstate-94696b5b-d077-4c53-a0be-7dbac69be4b7"
+  name     = "tfstate-f8d77d8a-b043-1085-af22-6f6faa5217b9"
   location = var.default_region
   storage_class = "STANDARD"
   versioning {
