@@ -5,6 +5,9 @@ variable "gcp_service_list" {
   default = [
     "run.googleapis.com",
     "spanner.googleapis.com",
+    "cloudtrace.googleapis.com",
+    "logging.googleapis.com",
+    "monitoring.googleapis.com",
   ]
 }
 
