@@ -123,7 +123,7 @@ resource "google_artifact_registry_repository" "run-image" {
   project       = var.default_project_id
   location      = var.default_region
   repository_id = "api"
-  description   = "Cloud Run services (API)のイメージを格納するArtifact Registryのリポジトリ"
+  description   = "Cloud Run services (api) で使用するイメージを格納するArtifact Registryのリポジトリ"
   format        = "DOCKER"
 }
 
