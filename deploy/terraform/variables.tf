@@ -18,11 +18,14 @@ variable "cloud_run_api" {
   type = object({
       min_instance_count = number
       max_instance_count = number
-      container_port = number
-      limit_cpu = string
-      limit_memory = string
       cpu_idle = bool
       startup_cpu_boost = bool
+      app_port = number
+      app_limit_cpu = string
+      app_limit_memory = string
+      otel_collector_port = number
+      otel_collector_limit_cpu = string
+      otel_collector_limit_memory = string
     })
   description = "Cloud Run services (サービス名:API)の設定値"
   default = {
@@ -30,16 +33,22 @@ variable "cloud_run_api" {
     min_instance_count = 0
     # リビジョンインスタンス数最大値
     max_instance_count = 1
-    # コンテナのポート番号(外部から内部への転送先)
-    container_port = 8080
-    # CPU上限
-    limit_cpu = "1"
-    # メモリ上限
-    limit_memory = "512Mi"
-    # リクエストがあるときだけCPU割り当てるか
-    cpu_idle = true
+    # アプリケーションコンテナでリクエストがあるときだけCPU割り当てるか(true:リクエストベースの課金、false:インスタンスベースの課金)
+    cpu_idle = false
     # CPUブーストするか(コールドスタート時のレイテンシを低減する)
     startup_cpu_boost = false
+    # アプリケーションコンテナのポート番号(外部から内部への転送先)
+    app_port = 8080
+    # アプリケーションコンテナのCPU上限
+    app_limit_cpu = "0.8"
+    # アプリケーションコンテナのメモリ上限
+    app_limit_memory = "512Mi"
+    # Otel コレクターコンテナのポート
+    otel_collector_port = 4317
+    # Otel コレクターコンテナのCPU上限
+    otel_collector_limit_cpu = "0.2"
+    # Otel コレクターコンテナのメモリ上限
+    otel_collector_limit_memory = "512Mi"
   }
 }
 

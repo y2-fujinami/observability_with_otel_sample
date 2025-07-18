@@ -31,6 +31,8 @@ resource "google_cloud_run_v2_service" "api" {
       min_instance_count = var.cloud_run_api.min_instance_count
       max_instance_count = var.cloud_run_api.max_instance_count
     }
+
+    # アプリケーションコンテナ (INGRESS)
     containers {
       name = "go-application"
       # イメージのURL
@@ -40,8 +42,8 @@ resource "google_cloud_run_v2_service" "api" {
         # - https://cloud.google.com/run/docs/configuring/cpu?hl=ja
         # - https://cloud.google.com/run/docs/configuring/memory-limits?hl=ja
         limits = {
-          cpu    = var.cloud_run_api.limit_cpu
-          memory = var.cloud_run_api.limit_memory
+          cpu    = var.cloud_run_api.app_limit_cpu
+          memory = var.cloud_run_api.app_limit_memory
         }
         # リクエストがあるときだけCPUを割り当てるか(=コールドスタートを許容するか)
         cpu_idle = var.cloud_run_api.cpu_idle
@@ -52,7 +54,7 @@ resource "google_cloud_run_v2_service" "api" {
         # プロトコル
         name = "h2c"
         # コンテナのポート番号(外部から内部への転送先。コンテナの環境変数PORTとしても設定される)
-        container_port = var.cloud_run_api.container_port
+        container_port = var.cloud_run_api.app_port
       }
 
       # 環境変数
@@ -67,6 +69,33 @@ resource "google_cloud_run_v2_service" "api" {
       env {
         name  = "SPANNER_DATABASE_ID"
         value = var.spanner_database_dev.name
+      }
+      env {
+        name  = "OTEL_COLLECTOR_HOST"
+        value = "localhost:${var.cloud_run_api.otel_collector_port}"
+      }
+    }
+
+    # Otel コレクターコンテナ (サイドカー)
+    containers {
+      name = "otel-collector"
+      # イメージのURL
+      image = "${var.default_region}-docker.pkg.dev/${var.default_project_id}/api/otel_collector:latest"
+      resources {
+        # 上限設定(CPU/メモリ)
+        limits = {
+          cpu    = var.cloud_run_api.otel_collector_limit_cpu
+          memory = var.cloud_run_api.otel_collector_limit_memory
+        }
+        # リクエストがあるときだけCPUを割り当てるか(=コールドスタートを許容するか)
+        cpu_idle = var.cloud_run_api.cpu_idle
+        # CPUブーストするか(コールドスタート時のレイテンシを低減する)
+        startup_cpu_boost = var.cloud_run_api.startup_cpu_boost
+      }
+
+      env {
+        name  = "PORT"
+        value = "${var.cloud_run_api.otel_collector_port}"
       }
     }
   }
