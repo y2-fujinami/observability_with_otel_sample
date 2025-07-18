@@ -41,7 +41,7 @@ services:
     command: ["--config=/etc/otel-collector.yaml"]
     volumes:
       - type: bind
-        source: ../../build/packages/otel_collector/otel-collector.yaml
+        source: ../../build/packages/otel_collector/otel-collector-local.yaml
         target: /etc/otel-collector.yaml
     ports:
       - 4317:4317
