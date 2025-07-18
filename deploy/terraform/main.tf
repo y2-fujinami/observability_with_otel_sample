@@ -131,30 +131,30 @@ resource "google_artifact_registry_repository" "run-image" {
 }
 
 # CircleCI関連
-# サービスアカウント
-resource "google_service_account" "circleci" {
-  account_id   = "circleci"
-  description  = "GCPの操作をするためのCircleCI用サービスアカウント"
-  display_name = "CircleCI Service Account"
-}
+# # サービスアカウント
+# resource "google_service_account" "circleci" {
+#   account_id   = "circleci"
+#   description  = "GCPの操作をするためのCircleCI用サービスアカウント"
+#   display_name = "CircleCI Service Account"
+# }
 
-# CircleCIのサービスアカウントに付与する事前定義ロール
-variable "circleci_roles" {
-  type = set(string)
-  default = [
-    "roles/run.developer",
-    "roles/iam.serviceAccountUser",
-    "roles/artifactregistry.writer"
-  ]
-}
+# # CircleCIのサービスアカウントに付与する事前定義ロール
+# variable "circleci_roles" {
+#   type = set(string)
+#   default = [
+#     "roles/run.developer",
+#     "roles/iam.serviceAccountUser",
+#     "roles/artifactregistry.writer"
+#   ]
+# }
 
-# サービスアカウントにプロジェクトレベルでのロール付与
-resource "google_project_iam_member" "circleci" {
-  for_each = var.circleci_roles
-  project  = var.default_project_id
-  role     = each.key
-  member   = "serviceAccount:${google_service_account.circleci.email}"
-}
+# # サービスアカウントにプロジェクトレベルでのロール付与
+# resource "google_project_iam_member" "circleci" {
+#   for_each = var.circleci_roles
+#   project  = var.default_project_id
+#   role     = each.key
+#   member   = "serviceAccount:${google_service_account.circleci.email}"
+# }
 
 # Spanner関連
 # インスタンス
