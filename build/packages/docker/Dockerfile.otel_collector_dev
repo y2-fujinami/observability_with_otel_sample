@@ -1,0 +1,5 @@
+FROM otel/opentelemetry-collector-contrib:0.126.0
+
+# COPY のホスト側のパスは、docker build でビルドコンテキストをプロジェクトルート直下に指定している前提
+COPY build/packages/otel_collector/otel-collector-dev.yaml /etc/otel-collector.yaml
+CMD ["--config /etc/otel-collector.yaml"]
