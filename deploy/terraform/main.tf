@@ -2,7 +2,7 @@
 variable "gcp_service_list" {
   description = "GCPで有効にするサービスのリスト"
   type        = list(string)
-  default     = [
+  default = [
     "run.googleapis.com",
     "spanner.googleapis.com",
   ]
@@ -17,9 +17,9 @@ resource "google_project_service" "gcp_services" {
 # 参考: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/cloud_run_v2_service
 resource "google_cloud_run_v2_service" "api" {
   # サービス名
-  name     = "api"
+  name        = "api"
   description = "外部公開するAPIのCloud Run services設定"
-  location = var.default_region
+  location    = var.default_region
   # 外部からのトラフィックの受け入れ許可設定
   ingress = "INGRESS_TRAFFIC_ALL"
   # このサービスにリビジョンを作成する時に使われるテンプレート設定
@@ -95,7 +95,7 @@ resource "google_cloud_run_v2_service" "api" {
 
       env {
         name  = "PORT"
-        value = "${var.cloud_run_api.otel_collector_port}"
+        value = var.cloud_run_api.otel_collector_port
       }
     }
   }
@@ -114,8 +114,8 @@ resource "google_cloud_run_v2_service" "api" {
 # - https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/cloud_run_v2_service_iam
 # - https://zenn.dev/t_shunsuke/articles/50a4ff8dd37c77
 resource "google_cloud_run_v2_service_iam_binding" "api_all_users" {
-  name = google_cloud_run_v2_service.api.name
-  role = "roles/run.invoker"
+  name    = google_cloud_run_v2_service.api.name
+  role    = "roles/run.invoker"
   members = ["allUsers"]
 }
 
@@ -123,7 +123,7 @@ resource "google_artifact_registry_repository" "run-image" {
   project       = var.default_project_id
   location      = var.default_region
   repository_id = "api"
-  description = "Cloud Run services (API)のイメージを格納するArtifact Registryのリポジトリ"
+  description   = "Cloud Run services (API)のイメージを格納するArtifact Registryのリポジトリ"
   format        = "DOCKER"
 }
 
@@ -148,27 +148,27 @@ variable "circleci_roles" {
 # サービスアカウントにプロジェクトレベルでのロール付与
 resource "google_project_iam_member" "circleci" {
   for_each = var.circleci_roles
-  project = var.default_project_id
-  role    = each.key
-  member  = "serviceAccount:${google_service_account.circleci.email}"
+  project  = var.default_project_id
+  role     = each.key
+  member   = "serviceAccount:${google_service_account.circleci.email}"
 }
 
 # Spanner関連
 # インスタンス
 resource "google_spanner_instance" "dev" {
-  name          = var.spanner_instance_dev.name
-  config        = var.spanner_instance_dev.config
-  display_name  = var.spanner_instance_dev.display_name
-  num_nodes     = var.spanner_instance_dev.num_nodes
-  depends_on = [google_project_service.gcp_services["spanner.googleapis.com"]]
+  name         = var.spanner_instance_dev.name
+  config       = var.spanner_instance_dev.config
+  display_name = var.spanner_instance_dev.display_name
+  num_nodes    = var.spanner_instance_dev.num_nodes
+  depends_on   = [google_project_service.gcp_services["spanner.googleapis.com"]]
 }
 
 # インスタンスのIAM(多分不要・・・インスタンスレベルで操作するのは、現状オーナーのアカウントのみ)
 
 # データベース
 resource "google_spanner_database" "dev-1" {
-  instance = var.spanner_database_dev.instance
-  name     = var.spanner_database_dev.name
+  instance   = var.spanner_database_dev.instance
+  name       = var.spanner_database_dev.name
   depends_on = [google_spanner_instance.dev]
 }
 

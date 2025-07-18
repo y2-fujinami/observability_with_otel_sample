@@ -1,32 +1,32 @@
 variable "default_project_id" {
-  type = string
+  type        = string
   description = "各リソースのデフォルトのプロジェクトID"
-  default = "y2-fujinami-study"
+  default     = "y2-fujinami-study"
 }
 variable "default_region" {
-  type = string
+  type        = string
   description = "各リージョンリソースのデフォルトのリージョン"
-  default = "us-central1"
+  default     = "us-central1"
 }
 variable "default_zone" {
-  type = string
+  type        = string
   description = "各ゾーンリソースのデフォルトのゾーン"
-  default = "us-central1-a"
+  default     = "us-central1-a"
 }
 
 variable "cloud_run_api" {
   type = object({
-      min_instance_count = number
-      max_instance_count = number
-      cpu_idle = bool
-      startup_cpu_boost = bool
-      app_port = number
-      app_limit_cpu = string
-      app_limit_memory = string
-      otel_collector_port = number
-      otel_collector_limit_cpu = string
-      otel_collector_limit_memory = string
-    })
+    min_instance_count          = number
+    max_instance_count          = number
+    cpu_idle                    = bool
+    startup_cpu_boost           = bool
+    app_port                    = number
+    app_limit_cpu               = string
+    app_limit_memory            = string
+    otel_collector_port         = number
+    otel_collector_limit_cpu    = string
+    otel_collector_limit_memory = string
+  })
   description = "Cloud Run services (サービス名:API)の設定値"
   default = {
     # リビジョンインスタンス数最小値
@@ -55,10 +55,10 @@ variable "cloud_run_api" {
 variable "spanner_instance_dev" {
   description = "Cloud Spannerのインスタンスの設定値"
   type = object({
-    name = string
-    config = string
+    name         = string
+    config       = string
     display_name = string
-    num_nodes = number
+    num_nodes    = number
   })
   default = {
     # インスタンス名(ID)
@@ -76,7 +76,7 @@ variable "spanner_database_dev" {
   description = "Cloud Spannerのデータベースの設定値"
   type = object({
     instance = string
-    name = string
+    name     = string
   })
   default = {
     # インスタンス名(ID)
