@@ -215,9 +215,9 @@ resource "google_storage_bucket" "application_log_all" {
 
 # エラーログ保存用の Cloud Logging バケット
 resource "google_logging_project_bucket_config" "application_log_error" {
-  project   = var.default_project_id
-  location  = "us-central1"
-  bucket_id = "application-log-error"
+  project          = var.default_project_id
+  location         = "us-central1"
+  bucket_id        = "application-log-error"
   enable_analytics = true
 }
 
