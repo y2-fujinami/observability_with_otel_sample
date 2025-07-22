@@ -77,6 +77,10 @@ resource "google_cloud_run_v2_service" "api" {
         name  = "OTEL_COLLECTOR_HOST"
         value = "localhost:${var.cloud_run_api.otel_collector_port}"
       }
+
+      # TODO: ヘルスチェック用のRPCメソッドを追加したらここへアプリケーションコンテナとしての startup_probe, liveness_prove を設定する
+      
+      depends_on = ["otel-collector"]
     }
 
     # Otel コレクターコンテナ (サイドカー)
@@ -94,6 +98,26 @@ resource "google_cloud_run_v2_service" "api" {
         cpu_idle = var.cloud_run_api.cpu_idle
         # CPUブーストするか(コールドスタート時のレイテンシを低減する)
         startup_cpu_boost = var.cloud_run_api.startup_cpu_boost
+      }
+
+      startup_probe {
+        http_get {
+          port = var.cloud_run_api.otel_collector_healthcheck_port
+        }
+        initial_delay_seconds = 5
+        timeout_seconds       = 1
+        period_seconds        = 5
+        failure_threshold     = 3
+      }
+
+      liveness_probe {
+        http_get {
+          port = var.cloud_run_api.otel_collector_healthcheck_port
+        }
+        initial_delay_seconds = 30
+        timeout_seconds       = 1
+        period_seconds        = 10
+        failure_threshold     = 3
       }
 
       env {

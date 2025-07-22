@@ -16,16 +16,17 @@ variable "default_zone" {
 
 variable "cloud_run_api" {
   type = object({
-    min_instance_count          = number
-    max_instance_count          = number
-    cpu_idle                    = bool
-    startup_cpu_boost           = bool
-    app_port                    = number
-    app_limit_cpu               = string
-    app_limit_memory            = string
-    otel_collector_port         = number
-    otel_collector_limit_cpu    = string
-    otel_collector_limit_memory = string
+    min_instance_count              = number
+    max_instance_count              = number
+    cpu_idle                        = bool
+    startup_cpu_boost               = bool
+    app_port                        = number
+    app_limit_cpu                   = string
+    app_limit_memory                = string
+    otel_collector_port             = number
+    otel_collector_healthcheck_port = number
+    otel_collector_limit_cpu        = string
+    otel_collector_limit_memory     = string
   })
   description = "Cloud Run services (サービス名:API)の設定値"
   default = {
@@ -45,6 +46,8 @@ variable "cloud_run_api" {
     app_limit_memory = "512Mi"
     # Otel コレクターコンテナのポート
     otel_collector_port = 4317
+    # Otel コレクターコンテナのヘルスチェック用ポート
+    otel_collector_healthcheck_port = 13133
     # Otel コレクターコンテナのCPU上限
     otel_collector_limit_cpu = "0.2"
     # Otel コレクターコンテナのメモリ上限
