@@ -218,6 +218,7 @@ resource "google_logging_project_bucket_config" "application_log_error" {
   project   = var.default_project_id
   location  = "us-central1"
   bucket_id = "application-log-error"
+  enable_analytics = true
 }
 
 # ログシンク設定 (GCS へアプリケーションログ全て保存)
