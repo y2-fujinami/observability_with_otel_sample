@@ -79,7 +79,7 @@ resource "google_cloud_run_v2_service" "api" {
       }
 
       # TODO: ヘルスチェック用のRPCメソッドを追加したらここへアプリケーションコンテナとしての startup_probe, liveness_prove を設定する
-      
+
       depends_on = ["otel-collector"]
     }
 
@@ -207,3 +207,47 @@ resource "google_spanner_database" "dev-1" {
 #  member  = "serviceAccount:${google_service_account.run-api.email}"
 #}
 
+# 全ログ保存用の GCS バケット
+resource "google_storage_bucket" "application_log_all" {
+  name     = "application-log-all"
+  location = "US-CENTRAL1"
+}
+
+# エラーログ保存用の Cloud Logging バケット
+resource "google_logging_project_bucket_config" "application_log_error" {
+  project   = var.default_project_id
+  location  = "us-central1"
+  bucket_id = "application-log-error"
+}
+
+# ログシンク設定 (GCS へアプリケーションログ全て保存)
+resource "google_logging_project_sink" "application_log_all" {
+  name        = "application-log-all"
+  destination = "storage.googleapis.com/${google_storage_bucket.application_log_all.name}"
+  filter      = "logName = projects/var.default_project_id/logs/application-log"
+
+  unique_writer_identity = true
+
+  depends_on = [google_storage_bucket.application_log_all]
+}
+
+# ログシンク設定 (Cloud Logging へエラーログのみ保存)
+resource "google_logging_project_sink" "application_log_error" {
+  name        = "application-log-error"
+  destination = "logging.googleapis.com/${google_logging_project_bucket_config.application_log_error.id}"
+  filter      = "logName = projects/${var.default_project_id}/logs/application-log AND severity >= ERROR"
+
+  depends_on = [google_logging_project_bucket_config.application_log_error]
+}
+
+# GCS バケットへのログシンクに使われるサービスアカウントに必要な権限付与
+resource "google_project_iam_binding" "gcs-bucket-writer" {
+  project = var.default_project_id
+  role    = "roles/storage.objectCreator"
+
+  members = [
+    google_logging_project_sink.application_log_all.writer_identity,
+  ]
+
+  depends_on = [google_logging_project_sink.application_log_all]
+}
