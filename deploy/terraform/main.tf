@@ -78,7 +78,21 @@ resource "google_cloud_run_v2_service" "api" {
         value = "localhost:${var.cloud_run_api.otel_collector_port}"
       }
 
-      # TODO: ヘルスチェック用のRPCメソッドを追加したらここへアプリケーションコンテナとしての startup_probe, liveness_prove を設定する
+      startup_probe {
+        grpc {}
+        initial_delay_seconds = 5
+        timeout_seconds       = 1
+        period_seconds        = 5
+        failure_threshold     = 3
+      }
+
+      liveness_probe {
+        grpc {}
+        initial_delay_seconds = 30
+        timeout_seconds       = 1
+        period_seconds        = 10
+        failure_threshold     = 3
+      }
 
       depends_on = ["otel-collector"]
     }

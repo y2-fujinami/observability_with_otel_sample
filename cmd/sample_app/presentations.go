@@ -7,18 +7,24 @@ import (
 	"modern-dev-env-app-sample/internal/sample_app/presentation/sample"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
+
 )
 
 // presentations 全プレゼンテーション層のインスタンスをまとめた構造体
 type presentations struct {
+	iHealthServer healthpb.HealthServer
 	iSampleServiceServer pb.SampleServiceServer
 }
 
 // newPresentations コンストラクタ
 func newPresentations(
+	healthServer healthpb.HealthServer,
 	sampleServiceServer pb.SampleServiceServer,
 ) *presentations {
 	return &presentations{
+		iHealthServer: healthServer,
 		iSampleServiceServer: sampleServiceServer,
 	}
 }
@@ -27,6 +33,9 @@ func newPresentations(
 func createPresentations(
 	applications *applications,
 ) (*presentations, error) {
+	healthServer := health.NewServer()
+	healthServer.SetServingStatus("SampleService", healthpb.HealthCheckResponse_SERVING)
+	
 	sampleServiceServer, err := sample.NewSampleServiceServer(
 		applications.iListSamplesUseCase,
 		applications.iCreateSampleUseCase,
@@ -36,7 +45,10 @@ func createPresentations(
 	if err != nil {
 		return nil, fmt.Errorf("failed to NewSampleServiceServer(): %w", err)
 	}
-	return newPresentations(sampleServiceServer), nil
+	return newPresentations(
+		healthServer, 
+		sampleServiceServer,
+	), nil
 }
 
 // registerProtocServices protoc都合のRPCサービス構造体を登録
@@ -44,5 +56,6 @@ func createPresentations(
 // protocコマンド実行で生成された「<元になった.proroファイル名>_grpc.pb.go」内に自動で定義されている
 // ここで登録されたRPCサービスについてのみ、gRPC通信が可能になる
 func (p *presentations) registerProtocServices(grpcServer *grpc.Server) {
+	healthpb.RegisterHealthServer(grpcServer, p.iHealthServer)
 	pb.RegisterSampleServiceServer(grpcServer, p.iSampleServiceServer)
 }

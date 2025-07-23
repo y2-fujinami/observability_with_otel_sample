@@ -89,7 +89,7 @@ services:
     entrypoint: tail -f /dev/null
     healthcheck:
       test: |
-        grpcurl -plaintext -d '{"name": "sample"}' ${API_HOST} api.SampleService.CreateSample
+        grpcurl -plaintext ${API_HOST} grpc.health.v1.Health.Check
       interval: 5s
       timeout: 10s
       retries: 10

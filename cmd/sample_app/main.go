@@ -8,24 +8,20 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	rand "math/rand/v2"
 
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/reflection"
-	"google.golang.org/grpc/status" 
 	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/exporters/stdout/stdoutlog"
 	"go.opentelemetry.io/otel/exporters/stdout/stdoutmetric"
-  	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
-  	"go.opentelemetry.io/otel/exporters/stdout/stdoutlog"
+	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/log/global"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/propagation"
@@ -35,8 +31,11 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.opentelemetry.io/otel/trace"
-
-	
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/status"
 )
 
 // TODO: 妥当なサービス名
@@ -317,6 +316,7 @@ func randProcStatus() procState {
 }
 
 // リクエストされたメソッド実行前に処理ステータス(エラー/高レイテンシー/正常)を確率で決定し、処理ステータスに応じて以降の処理を制御するインターセプター
+// (ヘルスチェックの RPC サービスだった場合は以下の処理を行わず処理続行)
 // 1. スパンをこの関数単位で作成する。
 // 2. 処理ステータスをランダムに決定する。
 // 3. 処理ステータスに応じて以下の処理を実行する。
@@ -324,6 +324,11 @@ func randProcStatus() procState {
 //   - 処理ステータスが高レイテンシー: 一定時間待った後、ログレベル Info で処理ステータスが高レイテンシーだったことをログ出力、メトリクスとしてカウントして処理を続行する
 //   - 処理ステータスが正常: ログレベル Info で処理ステータスが正常だったことをログ出力、メトリクスとしてカウントして処理を続行する
 func randProcStatusInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (res interface{}, err error) {
+	if serviceNameFromFullMethod(info.FullMethod) ==  "grpc.health.v1.Health" {
+		res, err = handler(ctx, req)
+		return
+	}
+	
 	scopeName := "randProcStatusInterceptor" // TODO 計装スコープ名のセマンティック規約意識
 	// テスト的に各テレメトリーデータに共通で仕込むプロパティ
 	commonAttrs := []attribute.KeyValue{
@@ -376,4 +381,14 @@ func randProcStatusInterceptor(ctx context.Context, req interface{}, info *grpc.
 		res, err = handler(ctx, req)
 	}
 	return
+}
+
+/// fullMethod は "/<サービス>/<メソッド>" な文字列
+func serviceNameFromFullMethod(fullMethod string) string {
+	parts := strings.Split(fullMethod, "/")
+	if len(parts) != 3 {
+		return ""
+	}
+
+	return parts[1]
 }
