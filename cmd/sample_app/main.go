@@ -226,7 +226,7 @@ func initTracerProvider(ctx context.Context, res *resource.Resource, conn *grpc.
 		}
 	}
 
-	bsp := sdktrace.NewBatchSpanProcessor(traceExporter, sdktrace.WithBatchTimeout(time.Minute)) // TODO: デフォルトの 5秒から 1分にしてみた
+	bsp := sdktrace.NewBatchSpanProcessor(traceExporter)
 	tracerProvider := sdktrace.NewTracerProvider(
 		sdktrace.WithSampler(sdktrace.AlwaysSample()),
 		sdktrace.WithResource(res),
