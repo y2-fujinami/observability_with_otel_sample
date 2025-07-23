@@ -95,6 +95,24 @@ services:
       retries: 10
       start_period: 10s
 
+  prometheus:
+    image: prom/prometheus:v3.3.1
+    volumes:
+      - type: bind
+        source: ./prometheus.yaml
+        target: /etc/prometheus/prometheus.yml
+    ports:
+      - 9090:9090
+
+  # todo: prometheus サービスのヘルスチェック
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.60
+    ports:
+      - 16686:16686
+
+  # todo: jaeger サービスのヘルスチェック
+
   # 全てのサービスの起動が完了したことの確認用
   all-service-up:
     image: alpine
