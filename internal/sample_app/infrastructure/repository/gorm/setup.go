@@ -5,6 +5,7 @@ import (
 
 	spannergorm "github.com/googleapis/go-gorm-spanner"
 	"gorm.io/gorm"
+	"gorm.io/plugin/opentelemetry/tracing"
 )
 
 // Setup DBはSpanner、データ操作はORM GORMという依存を考慮したリポジトリを利用するためのセットアップ
@@ -24,6 +25,9 @@ func Setup(gcpProjectID, spannerInstanceID, spannerDatabaseID string) (*gorm.DB,
 	}
 	if err := db.AutoMigrate(autoMigrateGORMs...); err != nil {
 		return nil, fmt.Errorf("failed to db.AutoMigrate(): %w", err)
+	}
+	if err := db.Use(tracing.NewPlugin()); err != nil {
+		panic(err)
 	}
 	return db, nil
 }
