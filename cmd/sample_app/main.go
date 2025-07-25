@@ -14,6 +14,7 @@ import (
 	rand "math/rand/v2"
 
 	"go.opentelemetry.io/contrib/bridges/otelslog"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
@@ -104,7 +105,11 @@ func startGrpcServer(port int, presentations *presentations) error {
 
 	// 2. gRPCサーバのインスタンスを生成
 	// (grpc.Serverインスタンスのポインタが返ってくる)
-	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(randProcStatusInterceptor))
+	grpcServer := grpc.NewServer(
+		grpc.StatsHandler(otelgrpc.NewServerHandler()),
+		grpc.UnaryInterceptor(randProcStatusInterceptor),
+
+	)
 
 	// 3. gRPCサーバにサービスを登録
 	presentations.registerProtocServices(grpcServer)
