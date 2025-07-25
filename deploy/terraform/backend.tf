@@ -1,7 +1,7 @@
 terraform {
-  # backend "gcs" {
-  #   bucket = "tfstate-f8d77d8a-b043-1085-af22-6f6faa5217b9"
-  # }
+  backend "gcs" {
+    bucket = "tfstate-f8d77d8a-b043-1085-af22-6f6faa5217b9"
+  }
 }
 
 # tfstateを保存するためのGCSバケット
