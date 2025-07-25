@@ -1,6 +1,7 @@
 package sample
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -42,11 +43,11 @@ func (l *DeleteSampleUseCase) validate() error {
 }
 
 // Run ユースケース: サンプルデータを削除 を実行
-func (l *DeleteSampleUseCase) Run(req *application.DeleteSampleRequest) (*application2.DeleteSampleResponse, error) {
+func (l *DeleteSampleUseCase) Run(ctx context.Context, req *application.DeleteSampleRequest) (*application2.DeleteSampleResponse, error) {
 	id := req.ID()
 
 	if err := l.iCon.Transaction(func(iTx usecase2.ITransaction) error {
-		samples, err := l.iSampleRepo.FindByIDs(value.SampleIDs{id}, iTx)
+		samples, err := l.iSampleRepo.FindByIDs(ctx, value.SampleIDs{id}, iTx)
 		if err != nil {
 			return fmt.Errorf("failed to FindByIDs(): %w", err)
 		}
@@ -55,7 +56,7 @@ func (l *DeleteSampleUseCase) Run(req *application.DeleteSampleRequest) (*applic
 		}
 
 		sampleEntity := samples[0]
-		if err := l.iSampleRepo.Delete(sampleEntity, iTx); err != nil {
+		if err := l.iSampleRepo.Delete(ctx, sampleEntity, iTx); err != nil {
 			return fmt.Errorf("failed to Delete(): %w", err)
 		}
 		return nil

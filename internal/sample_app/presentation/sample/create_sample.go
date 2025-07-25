@@ -11,7 +11,7 @@ import (
 )
 
 // CreateSample (protoc依存のRPCメソッド実装) サンプルデータを追加
-func (s *SampleServiceServer) CreateSample(_ context.Context, req *pb.CreateSampleRequest) (*pb.CreateSampleResponse, error) {
+func (s *SampleServiceServer) CreateSample(ctx context.Context, req *pb.CreateSampleRequest) (*pb.CreateSampleResponse, error) {
 	// protoc都合のリクエストパラメータ構造体をユースケース層都合のものに変換
 	useCaseReq, err := s.convertToCreateSampleRequestForUseCase(req)
 	if err != nil {
@@ -19,7 +19,7 @@ func (s *SampleServiceServer) CreateSample(_ context.Context, req *pb.CreateSamp
 	}
 
 	// ユースケースを実行
-	useCaseRes, err := s.iCreateSampleUseCase.Run(useCaseReq)
+	useCaseRes, err := s.iCreateSampleUseCase.Run(ctx, useCaseReq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to Run(): %w", err)
 	}

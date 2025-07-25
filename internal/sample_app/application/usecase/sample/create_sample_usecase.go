@@ -1,6 +1,7 @@
 package sample
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -42,14 +43,14 @@ func (l *CreateSampleUseCase) validate() error {
 }
 
 // Run ユースケース: サンプルデータを作成 を実行
-func (l *CreateSampleUseCase) Run(req *application.CreateSampleRequest) (*application2.CreateSampleResponse, error) {
+func (l *CreateSampleUseCase) Run(ctx context.Context, req *application.CreateSampleRequest) (*application2.CreateSampleResponse, error) {
 	createdSample, err := entity.CreateDefaultSample(req.Name())
 	if err != nil {
 		return nil, fmt.Errorf("failed to CreateDefaultSample(): %w", err)
 	}
 
 	if err := l.iCon.Transaction(func(iTx usecase2.ITransaction) error {
-		if err := l.iSampleRepo.Save(createdSample, iTx); err != nil {
+		if err := l.iSampleRepo.Save(ctx, createdSample, iTx); err != nil {
 			return fmt.Errorf("failed to Save(): %w", err)
 		}
 		return nil

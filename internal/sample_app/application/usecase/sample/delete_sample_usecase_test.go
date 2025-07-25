@@ -1,6 +1,7 @@
 package sample
 
 import (
+	"context"
 	"errors"
 	"reflect"
 	"testing"
@@ -117,6 +118,7 @@ func TestDeleteSampleUseCase_validate(t *testing.T) {
 // - Spannerエミュレータが起動状態であり、spanner-emulator:9010でアクセス可能であること
 // - DB projects/local-project/instances/test-instance/databases/test-database が作成されていること
 func TestDeleteSampleUseCase_Run(t *testing.T) {
+	ctx := context.Background()
 	gormDB := createConnectionForTest(t)
 	con := infrastructure.NewGORMConnection(gormDB)
 	sampleRepo, err := infrastructure2.CreateSampleRepository(con)
@@ -201,7 +203,7 @@ func TestDeleteSampleUseCase_Run(t *testing.T) {
 			fields: fields{
 				iCon: con,
 				iSampleRepo: func() application3.ISampleRepository {
-					mockSampleRepo.EXPECT().FindByIDs(gomock.Any(), gomock.Any()).Return(nil, errors.New("FindByIDs error"))
+					mockSampleRepo.EXPECT().FindByIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New("FindByIDs error"))
 					return mockSampleRepo
 				}(),
 			},
@@ -226,8 +228,8 @@ func TestDeleteSampleUseCase_Run(t *testing.T) {
 			fields: fields{
 				iCon: con,
 				iSampleRepo: func() application3.ISampleRepository {
-					mockSampleRepo.EXPECT().FindByIDs(gomock.Any(), gomock.Any()).Return(entity.Samples{sample1}, nil)
-					mockSampleRepo.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(errors.New("delete error"))
+					mockSampleRepo.EXPECT().FindByIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(entity.Samples{sample1}, nil)
+					mockSampleRepo.EXPECT().Delete(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("delete error"))
 					return mockSampleRepo
 				}(),
 			},
@@ -253,7 +255,7 @@ func TestDeleteSampleUseCase_Run(t *testing.T) {
 				iCon:        tt.fields.iCon,
 				iSampleRepo: tt.fields.iSampleRepo,
 			}
-			gotRes, err := l.Run(tt.args.req)
+			gotRes, err := l.Run(ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Run() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -265,7 +267,7 @@ func TestDeleteSampleUseCase_Run(t *testing.T) {
 			}
 
 			// エンティティが期待通り削除されているかチェック
-			gotSamples, err := sampleRepo.FindAll(nil)
+			gotSamples, err := sampleRepo.FindAll(ctx, nil)
 			if err != nil {
 				t.Fatalf("failed to FindAll(): %v", err)
 			}

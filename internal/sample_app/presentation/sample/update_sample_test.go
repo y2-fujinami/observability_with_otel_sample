@@ -42,8 +42,8 @@ func TestSampleServiceServer_UpdateSample(t *testing.T) {
 			name: "[OK]ユースケースを実行できる",
 			fields: fields{
 				iUpdateSampleUseCase: func() sample.IUpdateSampleUseCase {
-					usecase.EXPECT().Run(gomock.Any()).DoAndReturn(
-						func(req *application.UpdateSampleRequest) (*application2.UpdateSampleResponse, error) {
+					usecase.EXPECT().Run(gomock.Any(), gomock.Any()).DoAndReturn(
+						func(ctx context.Context, req *application.UpdateSampleRequest) (*application2.UpdateSampleResponse, error) {
 							return newUpdateSampleResponseForTest(t, newSampleForTest(t, req.ID(), req.Name())), nil
 						},
 					)
@@ -68,8 +68,8 @@ func TestSampleServiceServer_UpdateSample(t *testing.T) {
 			name: "[OK]ユースケースの実行でエラー",
 			fields: fields{
 				iUpdateSampleUseCase: func() sample.IUpdateSampleUseCase {
-					usecase.EXPECT().Run(gomock.Any()).DoAndReturn(
-						func(req *application.UpdateSampleRequest) (*application2.UpdateSampleResponse, error) {
+					usecase.EXPECT().Run(gomock.Any(), gomock.Any()).DoAndReturn(
+						func(ctx context.Context, req *application.UpdateSampleRequest) (*application2.UpdateSampleResponse, error) {
 							return nil, errors.New("run error")
 						},
 					)

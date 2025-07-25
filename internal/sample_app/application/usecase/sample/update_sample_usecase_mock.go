@@ -10,6 +10,7 @@
 package sample
 
 import (
+	context "context"
 	sample "modern-dev-env-app-sample/internal/sample_app/application/request/sample"
 	sample0 "modern-dev-env-app-sample/internal/sample_app/application/response/sample"
 	reflect "reflect"
@@ -21,6 +22,7 @@ import (
 type MockUpdateSampleUseCase struct {
 	ctrl     *gomock.Controller
 	recorder *MockUpdateSampleUseCaseMockRecorder
+	isgomock struct{}
 }
 
 // MockUpdateSampleUseCaseMockRecorder is the mock recorder for MockUpdateSampleUseCase.
@@ -41,16 +43,16 @@ func (m *MockUpdateSampleUseCase) EXPECT() *MockUpdateSampleUseCaseMockRecorder 
 }
 
 // Run mocks base method.
-func (m *MockUpdateSampleUseCase) Run(req *sample.UpdateSampleRequest) (*sample0.UpdateSampleResponse, error) {
+func (m *MockUpdateSampleUseCase) Run(ctx context.Context, req *sample.UpdateSampleRequest) (*sample0.UpdateSampleResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Run", req)
+	ret := m.ctrl.Call(m, "Run", ctx, req)
 	ret0, _ := ret[0].(*sample0.UpdateSampleResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Run indicates an expected call of Run.
-func (mr *MockUpdateSampleUseCaseMockRecorder) Run(req any) *gomock.Call {
+func (mr *MockUpdateSampleUseCaseMockRecorder) Run(ctx, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Run", reflect.TypeOf((*MockUpdateSampleUseCase)(nil).Run), req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Run", reflect.TypeOf((*MockUpdateSampleUseCase)(nil).Run), ctx, req)
 }

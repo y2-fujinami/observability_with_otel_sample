@@ -1,6 +1,7 @@
 package sample
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -43,12 +44,12 @@ func (l *UpdateSampleUseCase) validate() error {
 }
 
 // Run ユースケース: サンプルデータを更新 を実行
-func (l *UpdateSampleUseCase) Run(req *application.UpdateSampleRequest) (*application2.UpdateSampleResponse, error) {
+func (l *UpdateSampleUseCase) Run(ctx context.Context, req *application.UpdateSampleRequest) (*application2.UpdateSampleResponse, error) {
 	id := req.ID()
 	name := req.Name()
 	var updatedSample *entity.Sample
 	if err := l.iCon.Transaction(func(iTx usecase2.ITransaction) error {
-		samples, err := l.iSampleRepo.FindByIDs(value.SampleIDs{id}, iTx)
+		samples, err := l.iSampleRepo.FindByIDs(ctx, value.SampleIDs{id}, iTx)
 		if err != nil {
 			return fmt.Errorf("failed to FindByIDs(): %w", err)
 		}
@@ -62,7 +63,7 @@ func (l *UpdateSampleUseCase) Run(req *application.UpdateSampleRequest) (*applic
 			return fmt.Errorf("failed to Update(): %w", err)
 		}
 
-		if err := l.iSampleRepo.Save(updatedSample, iTx); err != nil {
+		if err := l.iSampleRepo.Save(ctx, updatedSample, iTx); err != nil {
 			return fmt.Errorf("failed to Save(): %w", err)
 		}
 		return nil

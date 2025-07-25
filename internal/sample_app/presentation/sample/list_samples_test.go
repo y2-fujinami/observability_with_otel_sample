@@ -42,8 +42,8 @@ func TestSampleServiceServer_ListSamples(t *testing.T) {
 			name: "[OK]ユースケースを実行できる",
 			fields: fields{
 				iListSamplesUseCase: func() application3.IListSamplesUseCase {
-					usecase.EXPECT().Run(gomock.Any()).DoAndReturn(
-						func(req *application.ListSamplesRequest) (*application2.ListSamplesResponse, error) {
+					usecase.EXPECT().Run(gomock.Any(), gomock.Any()).DoAndReturn(
+						func(ctx context.Context, req *application.ListSamplesRequest) (*application2.ListSamplesResponse, error) {
 							return newListSamplesResponseForTest(
 								t,
 								entity.Samples{newSampleForTest(t, req.IDs()[0], "name1")},
@@ -74,8 +74,8 @@ func TestSampleServiceServer_ListSamples(t *testing.T) {
 			name: "[NG]ユースケースの実行でエラー",
 			fields: fields{
 				iListSamplesUseCase: func() application3.IListSamplesUseCase {
-					usecase.EXPECT().Run(gomock.Any()).DoAndReturn(
-						func(req *application.ListSamplesRequest) (*application2.ListSamplesResponse, error) {
+					usecase.EXPECT().Run(gomock.Any(), gomock.Any()).DoAndReturn(
+						func(ctx context.Context, req *application.ListSamplesRequest) (*application2.ListSamplesResponse, error) {
 							return nil, errors.New("run error")
 						},
 					)

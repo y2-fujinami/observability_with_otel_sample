@@ -13,7 +13,7 @@ import (
 )
 
 // DeleteSample (protoc依存のRPCメソッド実装) サンプルデータを削除
-func (s *SampleServiceServer) DeleteSample(_ context.Context, req *pb.DeleteSampleRequest) (*pb.DeleteSampleResponse, error) {
+func (s *SampleServiceServer) DeleteSample(ctx context.Context, req *pb.DeleteSampleRequest) (*pb.DeleteSampleResponse, error) {
 	// protoc都合のリクエストパラメータ構造体をユースケース層都合のものに変換
 	useCaseReq, err := s.convertToDeleteSampleRequestForUseCase(req)
 	if err != nil {
@@ -21,7 +21,7 @@ func (s *SampleServiceServer) DeleteSample(_ context.Context, req *pb.DeleteSamp
 	}
 
 	// ユースケースを実行
-	useCaseRes, err := s.iDeleteSampleUseCase.Run(useCaseReq)
+	useCaseRes, err := s.iDeleteSampleUseCase.Run(ctx, useCaseReq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to Run(): %w", err)
 	}

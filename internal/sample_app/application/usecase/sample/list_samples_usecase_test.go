@@ -1,6 +1,7 @@
 package sample
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
@@ -63,6 +64,7 @@ func TestNewListSamplesUseCase(t *testing.T) {
 // - Spannerエミュレータが起動状態であり、spanner-emulator:9010でアクセス可能であること
 // - DB projects/local-project/instances/test-instance/databases/test-database が作成されていること
 func TestListSamplesUseCase_Run(t *testing.T) {
+	ctx := context.Background()
 	gorm := createConnectionForTest(t)
 	con := infrastructure2.NewGORMConnection(gorm)
 	sampleRepo, err := infrastructure.CreateSampleRepository(con)
@@ -163,7 +165,7 @@ func TestListSamplesUseCase_Run(t *testing.T) {
 			l := &ListSamplesUseCase{
 				iSampleRepo: tt.fields.iSampleRepo,
 			}
-			got, err := l.Run(tt.args.req)
+			got, err := l.Run(ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Run() error = %v, wantErr %v", err, tt.wantErr)
 				return

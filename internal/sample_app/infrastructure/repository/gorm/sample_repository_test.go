@@ -1,6 +1,7 @@
 package gorm
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"reflect"
@@ -141,6 +142,7 @@ func TestSampleRepository_Save(t *testing.T) {
 	// GORMConnectionのdbフィールドと、リポジトリのdbフィールドは同じものがセットされている必要がある。
 	gormCon := createGORMConForTest(t)
 	con := infrastructure.NewGORMConnection(gormCon)
+	ctx := context.Background()
 
 	type fields struct {
 		con *gorm.DB
@@ -202,7 +204,7 @@ func TestSampleRepository_Save(t *testing.T) {
 
 			// 書き込み操作はトランザクション内で実行しないとエラーになる
 			err := con.Transaction(func(iTx usecase2.ITransaction) error {
-				if err := s.Save(tt.args.sampleEntity, iTx); err != nil {
+				if err := s.Save(ctx, tt.args.sampleEntity, iTx); err != nil {
 					return fmt.Errorf("failed to Save(): %w", err)
 				}
 				return nil
@@ -212,7 +214,7 @@ func TestSampleRepository_Save(t *testing.T) {
 			}
 
 			// Save実行後に全てのSamplesを取得して、結果が期待通りであるかチェック
-			gotAllSamples, err := s.FindAll(nil)
+			gotAllSamples, err := s.FindAll(ctx, nil)
 			if err != nil {
 				t.Errorf("FindAll() error = %v", err)
 			}
@@ -226,6 +228,8 @@ func TestSampleRepository_Save(t *testing.T) {
 // - Spannerエミュレータが起動状態であり、spanner-emulator:9010でアクセス可能であること
 // - Spannerレミュレータ上にDB projects/local-project/instances/test-instance/databases/test-database が作成されていること
 func TestSampleRepository_FindByIDs(t *testing.T) {
+	ctx := context.Background()
+
 	type fields struct {
 		con *gorm.DB
 	}
@@ -357,7 +361,7 @@ func TestSampleRepository_FindByIDs(t *testing.T) {
 			s := &SampleRepository{
 				con: tt.fields.con,
 			}
-			got, err := s.FindByIDs(tt.args.ids, tt.args.iTx)
+			got, err := s.FindByIDs(ctx, tt.args.ids, tt.args.iTx)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FindByIDs() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -372,6 +376,8 @@ func TestSampleRepository_FindByIDs(t *testing.T) {
 // - Spannerエミュレータが起動状態であり、spanner-emulator:9010でアクセス可能であること
 // - Spannerレミュレータ上にDB projects/local-project/instances/test-instance/databases/test-database が作成されていること
 func TestSampleRepository_FindAll(t *testing.T) {
+	ctx := context.Background()
+
 	type fields struct {
 		con *gorm.DB
 	}
@@ -427,7 +433,7 @@ func TestSampleRepository_FindAll(t *testing.T) {
 			s := &SampleRepository{
 				con: tt.fields.con,
 			}
-			got, err := s.FindAll(tt.args.iTx)
+			got, err := s.FindAll(ctx, tt.args.iTx)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FindAll() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -442,6 +448,8 @@ func TestSampleRepository_FindAll(t *testing.T) {
 // - Spannerエミュレータが起動状態であり、spanner-emulator:9010でアクセス可能であること
 // - Spannerレミュレータ上にDB projects/local-project/instances/test-instance/databases/test-database が作成されていること
 func TestSampleRepository_Delete(t *testing.T) {
+	ctx := context.Background()
+
 	type fields struct {
 		con *gorm.DB
 	}
@@ -484,11 +492,11 @@ func TestSampleRepository_Delete(t *testing.T) {
 			s := &SampleRepository{
 				con: tt.fields.con,
 			}
-			if err := s.Delete(tt.args.sample, tt.args.iTx); (err != nil) != tt.wantErr {
+			if err := s.Delete(ctx, tt.args.sample, tt.args.iTx); (err != nil) != tt.wantErr {
 				t.Errorf("Delete() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			// Delete実行後の全てのSamplesを取得して、結果が期待通りであるかチェック
-			gotAllSamples, err := s.FindAll(tt.args.iTx)
+			gotAllSamples, err := s.FindAll(ctx, tt.args.iTx)
 			if err != nil {
 				t.Errorf("FindAll() error = %v", err)
 			}

@@ -13,7 +13,7 @@ import (
 // ListSamples (protoc依存のRPCメソッド実装) サンプルデータのリストを取得
 // protoc都合のリクエストパラメータ構造体をユースケース層都合の構造体に変換した上で、本質的な処理はユースケース層にあるメソッドへとルーティング
 // ユースケース層のメソッドから返ってきた結果は、protoc都合のレスポンスパラメータ構造体に変換して返す
-func (s *SampleServiceServer) ListSamples(_ context.Context, req *pb.ListSamplesRequest) (*pb.ListSamplesResponse, error) {
+func (s *SampleServiceServer) ListSamples(ctx context.Context, req *pb.ListSamplesRequest) (*pb.ListSamplesResponse, error) {
 	// protoc都合のリクエストパラメータ構造体をユースケース層都合のものに変換
 	useCaseReq, err := s.convertToListSamplesRequestForUseCase(req)
 	if err != nil {
@@ -21,7 +21,7 @@ func (s *SampleServiceServer) ListSamples(_ context.Context, req *pb.ListSamples
 	}
 
 	// ユースケースを実行
-	useCaseRes, err := s.iListSamplesUseCase.Run(useCaseReq)
+	useCaseRes, err := s.iListSamplesUseCase.Run(ctx, useCaseReq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to Run(): %w", err)
 	}

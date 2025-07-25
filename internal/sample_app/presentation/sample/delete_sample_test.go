@@ -42,8 +42,8 @@ func TestSampleServiceServer_DeleteSample(t *testing.T) {
 			name: "[OK]ユースケースを実行できる",
 			fields: fields{
 				iDeleteSampleUseCase: func() sample.IDeleteSampleUseCase {
-					usecase.EXPECT().Run(gomock.Any()).DoAndReturn(
-						func(req *application.DeleteSampleRequest) (*application2.DeleteSampleResponse, error) {
+					usecase.EXPECT().Run(gomock.Any(), gomock.Any()).DoAndReturn(
+						func(ctx context.Context, req *application.DeleteSampleRequest) (*application2.DeleteSampleResponse, error) {
 							return &application2.DeleteSampleResponse{}, nil
 						},
 					)
@@ -64,8 +64,8 @@ func TestSampleServiceServer_DeleteSample(t *testing.T) {
 			name: "[OK]ユースケースの実行でエラー",
 			fields: fields{
 				iDeleteSampleUseCase: func() sample.IDeleteSampleUseCase {
-					usecase.EXPECT().Run(gomock.Any()).DoAndReturn(
-						func(req *application.DeleteSampleRequest) (*application2.DeleteSampleResponse, error) {
+					usecase.EXPECT().Run(gomock.Any(), gomock.Any()).DoAndReturn(
+						func(ctx context.Context, req *application.DeleteSampleRequest) (*application2.DeleteSampleResponse, error) {
 							return nil, errors.New("run error")
 						},
 					)

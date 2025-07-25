@@ -10,6 +10,7 @@
 package sample
 
 import (
+	context "context"
 	sample "modern-dev-env-app-sample/internal/sample_app/application/request/sample"
 	sample0 "modern-dev-env-app-sample/internal/sample_app/application/response/sample"
 	reflect "reflect"
@@ -21,6 +22,7 @@ import (
 type MockDeleteSampleUseCase struct {
 	ctrl     *gomock.Controller
 	recorder *MockDeleteSampleUseCaseMockRecorder
+	isgomock struct{}
 }
 
 // MockDeleteSampleUseCaseMockRecorder is the mock recorder for MockDeleteSampleUseCase.
@@ -41,16 +43,16 @@ func (m *MockDeleteSampleUseCase) EXPECT() *MockDeleteSampleUseCaseMockRecorder 
 }
 
 // Run mocks base method.
-func (m *MockDeleteSampleUseCase) Run(req *sample.DeleteSampleRequest) (*sample0.DeleteSampleResponse, error) {
+func (m *MockDeleteSampleUseCase) Run(ctx context.Context, req *sample.DeleteSampleRequest) (*sample0.DeleteSampleResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Run", req)
+	ret := m.ctrl.Call(m, "Run", ctx, req)
 	ret0, _ := ret[0].(*sample0.DeleteSampleResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Run indicates an expected call of Run.
-func (mr *MockDeleteSampleUseCaseMockRecorder) Run(req any) *gomock.Call {
+func (mr *MockDeleteSampleUseCaseMockRecorder) Run(ctx, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Run", reflect.TypeOf((*MockDeleteSampleUseCase)(nil).Run), req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Run", reflect.TypeOf((*MockDeleteSampleUseCase)(nil).Run), ctx, req)
 }

@@ -1,6 +1,7 @@
 package sample
 
 import (
+	"context"
 	"errors"
 	"os"
 	"reflect"
@@ -120,6 +121,7 @@ func TestCreateSampleUseCase_validate(t *testing.T) {
 // - Spannerエミュレータが起動状態であり、spanner-emulator:9010でアクセス可能であること
 // - DB projects/local-project/instances/test-instance/databases/test-database が作成されていること
 func TestCreateSampleUseCase_Run(t *testing.T) {
+	ctx := context.Background()
 	gormDB := createConnectionForTest(t)
 	con := infrastructure2.NewGORMConnection(gormDB)
 	sampleRepo, err := infrastructure.CreateSampleRepository(con)
@@ -184,8 +186,8 @@ func TestCreateSampleUseCase_Run(t *testing.T) {
 			fields: fields{
 				iCon: con,
 				iSampleRepo: func() application3.ISampleRepository {
-					mockSampleRepo.EXPECT().Save(gomock.Any(), gomock.Any()).DoAndReturn(
-						func(sample *domain.Sample, iTx application4.ITransaction) error {
+					mockSampleRepo.EXPECT().Save(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+						func(ctx context.Context, sample *domain.Sample, iTx application4.ITransaction) error {
 							return errors.New("dummy error")
 						},
 					)
@@ -214,7 +216,7 @@ func TestCreateSampleUseCase_Run(t *testing.T) {
 				iSampleRepo: tt.fields.iSampleRepo,
 			}
 
-			gotRes, err := l.Run(tt.args.req)
+			gotRes, err := l.Run(ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Run() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -224,7 +226,7 @@ func TestCreateSampleUseCase_Run(t *testing.T) {
 			compareCreateSampleResponse(t, gotRes, tt.wantRes)
 
 			// エンティティが期待通り永続化されているかチェック
-			gotSamples, err := sampleRepo.FindAll(nil)
+			gotSamples, err := sampleRepo.FindAll(ctx, nil)
 			if err != nil {
 				t.Fatalf("failed to FindAll(): %v", err)
 			}
@@ -286,6 +288,7 @@ func createSampleForTest(t *testing.T, name value.SampleName) *domain.Sample {
 // - Spannerエミュレータが起動状態であり、spanner-emulator:9010でアクセス可能であること
 // - DB projects/local-project/instances/test-instance/databases/test-database が作成されていること
 func setupSamplesForTest(t *testing.T, samples domain.Samples) {
+	ctx := context.Background()
 	gormDB := createConnectionForTest(t)
 	iCon := infrastructure2.NewGORMConnection(gormDB)
 	sampleRepo, err := infrastructure.CreateSampleRepository(iCon)
@@ -296,7 +299,7 @@ func setupSamplesForTest(t *testing.T, samples domain.Samples) {
 	// リポジトリ経由でデータストアへ保存
 	if err := iCon.Transaction(func(iTx application4.ITransaction) error {
 		for _, sample := range samples {
-			if err := sampleRepo.Save(sample, iTx); err != nil {
+			if err := sampleRepo.Save(ctx, sample, iTx); err != nil {
 				t.Fatalf("failed to Save(): %v", err)
 			}
 		}
@@ -306,7 +309,7 @@ func setupSamplesForTest(t *testing.T, samples domain.Samples) {
 	}
 
 	// 与えられたエンティティのみがデータストア上に存在することを確認
-	gotSamples, err := sampleRepo.FindAll(nil)
+	gotSamples, err := sampleRepo.FindAll(ctx, nil)
 	if err != nil {
 		t.Fatalf("failed to FindAll(): %v", err)
 	}
@@ -318,6 +321,7 @@ func setupSamplesForTest(t *testing.T, samples domain.Samples) {
 // - Spannerエミュレータが起動状態であり、spanner-emulator:9010でアクセス可能であること
 // - DB projects/local-project/instances/test-instance/databases/test-database が作成されていること
 func deleteAllSamplesForTest(t *testing.T) {
+	ctx := context.Background()
 	gormDB := createConnectionForTest(t)
 	iCon := infrastructure2.NewGORMConnection(gormDB)
 	sampleRepo, err := infrastructure.CreateSampleRepository(iCon)
@@ -326,21 +330,21 @@ func deleteAllSamplesForTest(t *testing.T) {
 	}
 
 	// データストア上のSampleエンティティを全て取得
-	allSamples, err := sampleRepo.FindAll(nil)
+	allSamples, err := sampleRepo.FindAll(ctx, nil)
 	if err != nil {
 		t.Fatalf("failed to FindAll(): %v", err)
 	}
 
 	// データストア上のSampleエンティティを全て削除
 	for _, sample := range allSamples {
-		err := sampleRepo.Delete(sample, nil)
+		err := sampleRepo.Delete(ctx, sample, nil)
 		if err != nil {
 			t.Fatalf("failed to Delete(): %v", err)
 		}
 	}
 
 	// 削除されたことを確認
-	gotSamples, err := sampleRepo.FindAll(nil)
+	gotSamples, err := sampleRepo.FindAll(ctx, nil)
 	if err != nil {
 		t.Fatalf("failed to FindAll(): %v", err)
 	}
