@@ -6,7 +6,12 @@ import (
 
 	usecase "modern-dev-env-app-sample/internal/sample_app/application/usecase/sample"
 	"modern-dev-env-app-sample/internal/sample_app/presentation/pb"
+
+	"go.opentelemetry.io/contrib/bridges/otelslog"
 )
+
+// このパッケージ内でのみ使う logger 
+var logger = otelslog.NewLogger("modern-dev-env-app-sample/internal/sample_app/presentation/sample")	
 
 // SampleServiceServer protocで自動生成されたSampleServiceServerのインターフェースをみたす構造体
 type SampleServiceServer struct {

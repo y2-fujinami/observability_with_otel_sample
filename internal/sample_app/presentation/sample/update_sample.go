@@ -12,6 +12,8 @@ import (
 
 // UpdateSample (protoc依存のRPCメソッド実装) サンプルデータを更新
 func (s *SampleServiceServer) UpdateSample(ctx context.Context, req *pb.UpdateSampleRequest) (*pb.UpdateSampleResponse, error) {
+	logger.InfoContext(ctx, "UpdateSample Start")
+
 	// protoc都合のリクエストパラメータ構造体をユースケース層都合のものに変換
 	useCaseReq, err := s.convertToUpdateSampleRequestForUseCase(req)
 	if err != nil {
@@ -29,6 +31,9 @@ func (s *SampleServiceServer) UpdateSample(ctx context.Context, req *pb.UpdateSa
 	if err != nil {
 		return nil, fmt.Errorf("failed to convertToUpdateSampleResponseForProtoc(): %w", err)
 	}
+
+	logger.InfoContext(ctx, "UpdateSample End")
+
 	return pbRes, nil
 }
 
