@@ -68,6 +68,8 @@ func TestEnvironmentVariables_validate(t *testing.T) {
 		GCPProjectID      string
 		SpannerInstanceID string
 		SpannerDatabaseID string
+		OtelCollectorHost string
+		Environment string
 	}
 	tests := []struct {
 		name    string
@@ -81,6 +83,8 @@ func TestEnvironmentVariables_validate(t *testing.T) {
 				GCPProjectID:      "test",
 				SpannerInstanceID: "test",
 				SpannerDatabaseID: "test",
+				OtelCollectorHost: "test",
+				Environment: "local" ,
 			},
 			wantErr: false,
 		},
@@ -91,6 +95,8 @@ func TestEnvironmentVariables_validate(t *testing.T) {
 				GCPProjectID:      "test",
 				SpannerInstanceID: "test",
 				SpannerDatabaseID: "test",
+				OtelCollectorHost: "test",
+				Environment: "local" ,
 			},
 			wantErr: true,
 		},
@@ -101,6 +107,8 @@ func TestEnvironmentVariables_validate(t *testing.T) {
 				GCPProjectID:      "",
 				SpannerInstanceID: "test",
 				SpannerDatabaseID: "test",
+				OtelCollectorHost: "test",
+				Environment: "local" ,
 			},
 			wantErr: true,
 		},
@@ -111,6 +119,8 @@ func TestEnvironmentVariables_validate(t *testing.T) {
 				GCPProjectID:      "test",
 				SpannerInstanceID: "",
 				SpannerDatabaseID: "test",
+				OtelCollectorHost: "test",
+				Environment: "local" ,
 			},
 			wantErr: true,
 		},
@@ -121,6 +131,8 @@ func TestEnvironmentVariables_validate(t *testing.T) {
 				GCPProjectID:      "test",
 				SpannerInstanceID: "test",
 				SpannerDatabaseID: "",
+				OtelCollectorHost: "test",
+				Environment: "local" ,
 			},
 			wantErr: true,
 		},
@@ -132,6 +144,8 @@ func TestEnvironmentVariables_validate(t *testing.T) {
 				GCPProjectID:      tt.fields.GCPProjectID,
 				SpannerInstanceID: tt.fields.SpannerInstanceID,
 				SpannerDatabaseID: tt.fields.SpannerDatabaseID,
+				OtelCollectorHost: tt.fields.OtelCollectorHost,
+				Environment: tt.fields.Environment,
 			}
 			if err := e.validate(); (err != nil) != tt.wantErr {
 				t.Errorf("validate() error = %v, wantErr %v", err, tt.wantErr)
