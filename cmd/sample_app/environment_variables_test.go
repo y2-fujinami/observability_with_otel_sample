@@ -20,12 +20,16 @@ func TestLoadEnvironmentVariables(t *testing.T) {
 				_ = os.Setenv("GCP_PROJECT_ID", "test")
 				_ = os.Setenv("SPANNER_INSTANCE_ID", "test")
 				_ = os.Setenv("SPANNER_DATABASE_ID", "test")
+				_ = os.Setenv("OTEL_COLLECTOR_HOST", "test")
+				_ = os.Setenv("ENVIRONMENT", "local")
 			},
 			want: &EnvironmentVariables{
 				Port:              8080,
 				GCPProjectID:      "test",
 				SpannerInstanceID: "test",
 				SpannerDatabaseID: "test",
+				OtelCollectorHost: "test",
+				Environment: "local" ,
 			},
 			wantErr: false,
 		},
@@ -36,6 +40,8 @@ func TestLoadEnvironmentVariables(t *testing.T) {
 				_ = os.Setenv("GCP_PROJECT_ID", "") // エラー
 				_ = os.Setenv("SPANNER_INSTANCE_ID", "test")
 				_ = os.Setenv("SPANNER_DATABASE_ID", "test")
+				_ = os.Setenv("OTEL_COLLECTOR_HOST", "test")
+				_ = os.Setenv("ENVIRONMENT", "local")
 			},
 			want:    nil,
 			wantErr: true,
