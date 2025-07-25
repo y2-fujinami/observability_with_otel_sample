@@ -108,7 +108,6 @@ func startGrpcServer(port int, presentations *presentations) error {
 	grpcServer := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.UnaryInterceptor(randProcStatusInterceptor),
-
 	)
 
 	// 3. gRPCサーバにサービスを登録
