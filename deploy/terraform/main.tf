@@ -77,6 +77,10 @@ resource "google_cloud_run_v2_service" "api" {
         name  = "OTEL_COLLECTOR_HOST"
         value = "localhost:${var.cloud_run_api.otel_collector_port}"
       }
+      env {
+        name = "ENVIRONMENT"
+        value = "dev"
+      }
 
       startup_probe {
         grpc {}
