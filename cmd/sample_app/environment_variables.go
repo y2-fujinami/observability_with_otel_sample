@@ -55,7 +55,7 @@ func (e *EnvironmentVariables) validate() error {
 	if e.OtelCollectorHost == "" {
 		return errors.New("environment variable OtelCollectorHost is empty")
 	}
-	collectEnvs := []string{"local", "prod"}
+	collectEnvs := []string{"local", "dev"}
 	if !slices.Contains(collectEnvs, e.Environment) {
 		return errors.New("environment variable Environment is not collect")
 	}
