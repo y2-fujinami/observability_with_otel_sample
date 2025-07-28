@@ -214,6 +214,7 @@ resource "google_spanner_instance" "dev" {
 resource "google_spanner_database" "dev-1" {
   instance   = var.spanner_database_dev.instance
   name       = var.spanner_database_dev.name
+  deletion_protection = false
   depends_on = [google_spanner_instance.dev]
 }
 
