@@ -107,6 +107,7 @@ func startGrpcServer(port int, presentations *presentations) error {
 	// (grpc.Serverインスタンスのポインタが返ってくる)
 	grpcServer := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
+		grpc.UnaryInterceptor(loggingInterceptor),
 		grpc.UnaryInterceptor(randProcStatusInterceptor),
 	)
 
@@ -395,4 +396,20 @@ func serviceNameFromFullMethod(fullMethod string) string {
 	}
 
 	return parts[1]
+}
+
+// ロギング用インターセプター
+func loggingInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (res interface{}, err error) {
+	scopeName := "modern-dev-env-app-sample/cmd/sample_app/main"
+	logger := otelslog.NewLogger(scopeName)	
+	logger.InfoContext(ctx, fmt.Sprintf("%s Start", info.FullMethod)) 
+
+	res, err = handler(ctx, req)
+	if err != nil {
+		logger.ErrorContext(ctx, "failed to handler() in loggingInterceptor")
+	} else {
+		logger.InfoContext(ctx, fmt.Sprintf("%s End", info.FullMethod))
+	}
+
+	return
 }
