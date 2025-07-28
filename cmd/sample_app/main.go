@@ -107,8 +107,10 @@ func startGrpcServer(port int, presentations *presentations) error {
 	// (grpc.Serverインスタンスのポインタが返ってくる)
 	grpcServer := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
-		grpc.UnaryInterceptor(loggingInterceptor),
-		grpc.UnaryInterceptor(randProcStatusInterceptor),
+		grpc.ChainUnaryInterceptor(
+			loggingInterceptor,
+			randProcStatusInterceptor,
+		),
 	)
 
 	// 3. gRPCサーバにサービスを登録
