@@ -205,6 +205,7 @@ resource "google_spanner_instance" "dev" {
   config       = var.spanner_instance_dev.config
   display_name = var.spanner_instance_dev.display_name
   processing_units =    var.spanner_instance_dev.processing_units
+  force_destroy = true
   depends_on   = [google_project_service.gcp_services["spanner.googleapis.com"]]
 }
 
