@@ -58,10 +58,10 @@ variable "cloud_run_api" {
 variable "spanner_instance_dev" {
   description = "Cloud Spannerのインスタンスの設定値"
   type = object({
-    name         = string
-    config       = string
-    display_name = string
-    num_nodes    = number
+    name             = string
+    config           = string
+    display_name     = string
+    processing_units = number
   })
   default = {
     # インスタンス名(ID)
@@ -70,8 +70,8 @@ variable "spanner_instance_dev" {
     config = "regional-us-central1"
     # 表示名
     display_name = "y2-fujinami-study-dev"
-    # ノード数
-    num_nodes = 0.1
+    # コンピューティング容量
+    processing_units = 100
   }
 }
 
