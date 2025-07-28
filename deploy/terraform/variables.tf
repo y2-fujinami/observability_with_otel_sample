@@ -71,7 +71,7 @@ variable "spanner_instance_dev" {
     # 表示名
     display_name = "y2-fujinami-study-dev"
     # ノード数
-    num_nodes = 1
+    num_nodes = 0.1
   }
 }
 
