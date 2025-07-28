@@ -14,6 +14,8 @@ import (
 
 // DeleteSample (protoc依存のRPCメソッド実装) サンプルデータを削除
 func (s *SampleServiceServer) DeleteSample(ctx context.Context, req *pb.DeleteSampleRequest) (*pb.DeleteSampleResponse, error) {
+	logger.InfoContext(ctx, "DeleteSample Start")
+
 	// protoc都合のリクエストパラメータ構造体をユースケース層都合のものに変換
 	useCaseReq, err := s.convertToDeleteSampleRequestForUseCase(req)
 	if err != nil {
@@ -31,6 +33,9 @@ func (s *SampleServiceServer) DeleteSample(ctx context.Context, req *pb.DeleteSa
 	if err != nil {
 		return nil, fmt.Errorf("failed to convertToDeleteSampleResponseForProtoc(): %w", err)
 	}
+
+	logger.InfoContext(ctx, "DeleteSample End")
+
 	return pbRes, nil
 }
 

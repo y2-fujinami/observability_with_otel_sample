@@ -44,6 +44,8 @@ func (l *CreateSampleUseCase) validate() error {
 
 // Run ユースケース: サンプルデータを作成 を実行
 func (l *CreateSampleUseCase) Run(ctx context.Context, req *application.CreateSampleRequest) (*application2.CreateSampleResponse, error) {
+	logger.InfoContext(ctx, "CreateSampleUseCase.Run Start")
+
 	createdSample, err := entity.CreateDefaultSample(req.Name())
 	if err != nil {
 		return nil, fmt.Errorf("failed to CreateDefaultSample(): %w", err)
@@ -62,5 +64,8 @@ func (l *CreateSampleUseCase) Run(ctx context.Context, req *application.CreateSa
 	if err != nil {
 		return nil, fmt.Errorf("failed to NewCreateSampleResponse(): %w", err)
 	}
+
+	logger.InfoContext(ctx, "CreateSampleUseCase.Run End")
+
 	return res, nil
 }

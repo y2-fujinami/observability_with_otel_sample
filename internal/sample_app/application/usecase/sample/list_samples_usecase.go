@@ -28,6 +28,8 @@ func NewListSamplesUseCase(iSampleRepo usecase.ISampleRepository) (*ListSamplesU
 
 // Run ユースケース: サンプルデータのリストを取得 を実行
 func (l *ListSamplesUseCase) Run(ctx context.Context, req *sample.ListSamplesRequest) (*sample2.ListSamplesResponse, error) {
+	logger.InfoContext(ctx, "ListSamplesUseCase.Run Start")
+
 	samples, err := l.iSampleRepo.FindByIDs(ctx, req.IDs(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to FindSamples(): %w", err)
@@ -37,6 +39,9 @@ func (l *ListSamplesUseCase) Run(ctx context.Context, req *sample.ListSamplesReq
 	if err != nil {
 		return nil, fmt.Errorf("failed to NewListSamplesResponse(): %w", err)
 	}
+
+	logger.InfoContext(ctx, "ListSamplesUseCase.Run End")
+
 	return res, nil
 }
 

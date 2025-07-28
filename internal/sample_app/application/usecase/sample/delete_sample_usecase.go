@@ -44,6 +44,8 @@ func (l *DeleteSampleUseCase) validate() error {
 
 // Run ユースケース: サンプルデータを削除 を実行
 func (l *DeleteSampleUseCase) Run(ctx context.Context, req *application.DeleteSampleRequest) (*application2.DeleteSampleResponse, error) {
+	logger.InfoContext(ctx, "DeleteSampleUseCase.Run Start")
+
 	id := req.ID()
 
 	if err := l.iCon.Transaction(func(iTx usecase2.ITransaction) error {
@@ -63,6 +65,8 @@ func (l *DeleteSampleUseCase) Run(ctx context.Context, req *application.DeleteSa
 	}); err != nil {
 		return nil, fmt.Errorf("failed to Transaction(): %w", err)
 	}
+
+	logger.InfoContext(ctx, "DeleteSampleUseCase.Run End")
 
 	return &application2.DeleteSampleResponse{}, nil
 }

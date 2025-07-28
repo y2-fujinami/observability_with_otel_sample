@@ -12,6 +12,8 @@ import (
 
 // CreateSample (protoc依存のRPCメソッド実装) サンプルデータを追加
 func (s *SampleServiceServer) CreateSample(ctx context.Context, req *pb.CreateSampleRequest) (*pb.CreateSampleResponse, error) {
+	logger.InfoContext(ctx, "CreateSample Start")
+
 	// protoc都合のリクエストパラメータ構造体をユースケース層都合のものに変換
 	useCaseReq, err := s.convertToCreateSampleRequestForUseCase(req)
 	if err != nil {
@@ -29,6 +31,9 @@ func (s *SampleServiceServer) CreateSample(ctx context.Context, req *pb.CreateSa
 	if err != nil {
 		return nil, fmt.Errorf("failed to convertToCreateSampleResponseForProtoc(): %w", err)
 	}
+
+	logger.InfoContext(ctx, "CreateSample End")
+
 	return pbRes, nil
 }
 

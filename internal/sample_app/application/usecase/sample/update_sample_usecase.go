@@ -45,6 +45,8 @@ func (l *UpdateSampleUseCase) validate() error {
 
 // Run ユースケース: サンプルデータを更新 を実行
 func (l *UpdateSampleUseCase) Run(ctx context.Context, req *application.UpdateSampleRequest) (*application2.UpdateSampleResponse, error) {
+	logger.InfoContext(ctx, "UpdateSampleUseCase.Run Start")
+
 	id := req.ID()
 	name := req.Name()
 	var updatedSample *entity.Sample
@@ -75,5 +77,8 @@ func (l *UpdateSampleUseCase) Run(ctx context.Context, req *application.UpdateSa
 	if err != nil {
 		return nil, fmt.Errorf("failed to NewUpdateSampleResponse(): %w", err)
 	}
+
+	logger.InfoContext(ctx, "UpdateSampleUseCase.Run End")
+
 	return res, nil
 }

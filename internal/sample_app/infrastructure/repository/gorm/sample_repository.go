@@ -11,8 +11,11 @@ import (
 	"modern-dev-env-app-sample/internal/sample_app/domain/value"
 	"modern-dev-env-app-sample/internal/sample_app/infrastructure/repository/gorm/transaction"
 
+	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"gorm.io/gorm"
 )
+
+var logger = otelslog.NewLogger("modern-dev-env-app-sample/internal/sample_app/infrastructure/repository/gorm")	
 
 var _ usecase2.ISampleRepository = &SampleRepository{}
 
@@ -52,6 +55,8 @@ func (s *SampleRepository) validate() error {
 // Save 1件のSampleエンティティを保存
 // sampleがnilの場合は即エラー扱い
 func (s *SampleRepository) Save(ctx context.Context, sampleEntity *entity.Sample, iTx usecase.ITransaction) error {
+	logger.InfoContext(ctx, "Save Start")
+
 	if sampleEntity == nil {
 		return errors.New("sampleEntity is nil")
 	}
@@ -68,12 +73,17 @@ func (s *SampleRepository) Save(ctx context.Context, sampleEntity *entity.Sample
 	if result.Error != nil {
 		return fmt.Errorf("failed to Save(): %w", result.Error)
 	}
+
+	logger.InfoContext(ctx, "Save End")
+
 	return nil
 }
 
 // FindByIDs 指定したID群でSampleエンティティ群を取得
 // idsのサイズが0の場合は即エラー扱い
 func (s *SampleRepository) FindByIDs(ctx context.Context, ids value.SampleIDs, iTx usecase.ITransaction) ([]*entity.Sample, error) {
+	logger.InfoContext(ctx, "FindByIDs Start")
+
 	if len(ids) == 0 {
 		return nil, errors.New("ids is empty")
 	}
@@ -92,11 +102,16 @@ func (s *SampleRepository) FindByIDs(ctx context.Context, ids value.SampleIDs, i
 	if err != nil {
 		return nil, fmt.Errorf("failed to convGORMListToEntityList(): %w", err)
 	}
+
+	logger.InfoContext(ctx, "FindByIDs End")
+
 	return sampleEntities, nil
 }
 
 // FindAll 全てのSampleエンティティ群を取得
 func (s *SampleRepository) FindAll(ctx context.Context, iTx usecase.ITransaction) ([]*entity.Sample, error) {
+	logger.InfoContext(ctx, "FindAll Start")
+
 	sampleGORMs := make([]*SampleGORM, 0, 0)
 	conWithTx, err := transaction.ConWithTx(s.con, iTx)
 	if err != nil {
@@ -111,12 +126,17 @@ func (s *SampleRepository) FindAll(ctx context.Context, iTx usecase.ITransaction
 	if err != nil {
 		return nil, fmt.Errorf("failed to convGORMListToEntityList(): %w", err)
 	}
+
+	logger.InfoContext(ctx, "FindAll End")
+
 	return sampleEntities, nil
 }
 
 // Delete 1件のSampleエンティティを物理削除
 // sampleがnilの場合は即エラー扱い
 func (s *SampleRepository) Delete(ctx context.Context, sample *entity.Sample, iTx usecase.ITransaction) error {
+	logger.InfoContext(ctx, "Delete Start")
+
 	if sample == nil {
 		return errors.New("sample is nil")
 	}
@@ -125,6 +145,9 @@ func (s *SampleRepository) Delete(ctx context.Context, sample *entity.Sample, iT
 		return fmt.Errorf("failed to conWithTx(): %w", err)
 	}
 	conWithTx.WithContext(ctx).Unscoped().Where("id = ?", sample.ID().ToString()).Delete(&SampleGORM{})
+
+	logger.InfoContext(ctx, "Delete End")
+
 	return nil
 }
 

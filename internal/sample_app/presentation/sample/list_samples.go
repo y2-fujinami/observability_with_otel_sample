@@ -14,6 +14,8 @@ import (
 // protoc都合のリクエストパラメータ構造体をユースケース層都合の構造体に変換した上で、本質的な処理はユースケース層にあるメソッドへとルーティング
 // ユースケース層のメソッドから返ってきた結果は、protoc都合のレスポンスパラメータ構造体に変換して返す
 func (s *SampleServiceServer) ListSamples(ctx context.Context, req *pb.ListSamplesRequest) (*pb.ListSamplesResponse, error) {
+	logger.InfoContext(ctx, "ListSamples Start")
+
 	// protoc都合のリクエストパラメータ構造体をユースケース層都合のものに変換
 	useCaseReq, err := s.convertToListSamplesRequestForUseCase(req)
 	if err != nil {
@@ -31,6 +33,9 @@ func (s *SampleServiceServer) ListSamples(ctx context.Context, req *pb.ListSampl
 	if err != nil {
 		return nil, fmt.Errorf("failed to convertToListSamplesResponseForProtoc(): %w", err)
 	}
+
+	logger.InfoContext(ctx, "ListSamples End")
+
 	return pbRes, nil
 }
 
