@@ -245,7 +245,7 @@ resource "google_logging_project_bucket_config" "application_log_error" {
 resource "google_logging_project_sink" "application_log_all" {
   name        = "application-log-all"
   destination = "storage.googleapis.com/${google_storage_bucket.application_log_all.name}"
-  filter      = "logName = projects/var.default_project_id/logs/application-log"
+  filter      = "logName = projects/${var.default_project_id}/logs/application-log"
 
   unique_writer_identity = true
 
