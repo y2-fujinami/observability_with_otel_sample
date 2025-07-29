@@ -374,9 +374,9 @@ func randProcStatusInterceptor(ctx context.Context, req interface{}, info *grpc.
 
 	switch randProcStatus() {
 	case procStateError:
-		logger.ErrorContext(ctx, "procState is error") // otel 的には log.SeverityError 扱いになる
 		errCount.Add(ctx, 1, metric.WithAttributes(commonAttrs...))
-		err = status.Error(codes.Internal, "error occurred randomly")
+		err = fmt.Errorf("procState is error")
+		return
 	case procStateHighLatency:
 		<-time.After(2*time.Second)
 		logger.InfoContext(ctx, "procState is highLatency. 2 second waited")
