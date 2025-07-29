@@ -43,7 +43,7 @@ extensions:
 exporters:
   googlecloud:
     log:
-      default_log_name: projects/y2-fujinami-study/logs/application-log
+      default_log_name: application-log
 
 service:
   extensions: [health_check]
