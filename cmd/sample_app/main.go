@@ -357,19 +357,19 @@ func randProcStatusInterceptor(ctx context.Context, req interface{}, info *grpc.
 
 	errCount, err := meter.Int64Counter("procStateError", metric.WithDescription("procStateError count"))
 	if err != nil {
-		err = status.Error(codes.Internal, "failed to meter.Int64Counter") // TODO エラーハンドリング
+		err = fmt.Errorf("failed to meter.Int64Counter")
 		return
 	}
 
 	highLatencyCount, err := meter.Int64Counter("procStateHighLatency", metric.WithDescription("procStateHighLatency count"))
 	if err != nil {
-		err = status.Error(codes.Internal, "failed to meter.Int64Counter") // TODO エラーハンドリング
+		err = fmt.Errorf("failed to meter.Int64Counter")
 		return
 	}
 
 	normalCount, err := meter.Int64Counter("procStateNormal", metric.WithDescription("procStateNormal count"))
 	if err != nil {
-		err = status.Error(codes.Internal, "failed to meter.Int64Counter") // TODO エラーハンドリング
+		err = fmt.Errorf("failed to meter.Int64Counter")
 		return
 	}
 
