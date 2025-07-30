@@ -409,7 +409,7 @@ func loggingInterceptor(ctx context.Context, req interface{}, info *grpc.UnarySe
 
 	res, err = handler(ctx, req)
 	if err != nil {
-		logger.ErrorContext(ctx, "failed to handler() in loggingInterceptor")
+		logger.ErrorContext(ctx, fmt.Sprintf("%v", err))
 	} else {
 		logger.InfoContext(ctx, fmt.Sprintf("%s End", info.FullMethod))
 	}
