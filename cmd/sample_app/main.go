@@ -17,6 +17,7 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	otelcodes "go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -353,7 +354,14 @@ func randProcStatusInterceptor(ctx context.Context, req interface{}, info *grpc.
 		ctx,
 		"randProcStatusInterceptor", // TODO スパン名のセマンティック規約意識
 		trace.WithAttributes(commonAttrs...))
-	defer span.End()
+	defer func() {
+		// 関数終了時に確実にスパンを終了させる(エラーだった場合はスパンにエラーを記録する)
+		if err != nil {
+			span.SetStatus(otelcodes.Error, err.Error())
+			span.RecordError(err)
+		}
+		span.End()
+	}()
 
 	errCount, err := meter.Int64Counter("procStateError", metric.WithDescription("procStateError count"))
 	if err != nil {
@@ -382,13 +390,14 @@ func randProcStatusInterceptor(ctx context.Context, req interface{}, info *grpc.
 		<-time.After(2*time.Second)
 		logger.InfoContext(ctx, "procState is highLatency. 2 second waited")
 		highLatencyCount.Add(ctx, 1, metric.WithAttributes(commonAttrs...))
-		res, err = handler(ctx, req)		
+		res, err = handler(ctx, req)
+		return	
 	default:
 		logger.InfoContext(ctx, "procState is normal")
 		normalCount.Add(ctx, 1, metric.WithAttributes(commonAttrs...))
 		res, err = handler(ctx, req)
+		return
 	}
-	return
 }
 
 /// fullMethod は "/<サービス>/<メソッド>" な文字列
