@@ -109,6 +109,7 @@ func startGrpcServer(port int, presentations *presentations) error {
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.ChainUnaryInterceptor(
 			loggingInterceptor,
+			errorHandlingInterceptor,
 			randProcStatusInterceptor,
 		),
 	)
@@ -411,6 +412,17 @@ func loggingInterceptor(ctx context.Context, req interface{}, info *grpc.UnarySe
 		logger.ErrorContext(ctx, "failed to handler() in loggingInterceptor")
 	} else {
 		logger.InfoContext(ctx, fmt.Sprintf("%s End", info.FullMethod))
+	}
+
+	return
+}
+
+// エラーハンドリング用インターセプター
+func errorHandlingInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (res interface{}, err error) {
+	res, err = handler(ctx, req)
+	if err != nil {
+		 // 本来は err の中身を確認して、gRPC ステータスコードのどれに該当するのかを判断して status.Errorf を作成する処理が必要
+		return nil, status.Errorf(codes.Internal, "internal error: %v", err)
 	}
 
 	return
