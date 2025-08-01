@@ -22,6 +22,8 @@ func TestLoadEnvironmentVariables(t *testing.T) {
 				_ = os.Setenv("SPANNER_DATABASE_ID", "test")
 				_ = os.Setenv("OTEL_COLLECTOR_HOST", "test")
 				_ = os.Setenv("ENVIRONMENT", "local")
+				_ = os.Setenv("OTEL_GO_X_EXEMPLAR", "true")
+				_ = os.Setenv("OTEL_METRICS_EXEMPLAR_FILTER", "always_on")
 			},
 			want: &EnvironmentVariables{
 				Port:              8080,
@@ -29,7 +31,9 @@ func TestLoadEnvironmentVariables(t *testing.T) {
 				SpannerInstanceID: "test",
 				SpannerDatabaseID: "test",
 				OtelCollectorHost: "test",
-				Environment: "local" ,
+				Environment: "local",
+				OtelGoXExemplar: true,
+				OtelMetricsExemplarFilter: "always_on",
 			},
 			wantErr: false,
 		},
@@ -42,6 +46,8 @@ func TestLoadEnvironmentVariables(t *testing.T) {
 				_ = os.Setenv("SPANNER_DATABASE_ID", "test")
 				_ = os.Setenv("OTEL_COLLECTOR_HOST", "test")
 				_ = os.Setenv("ENVIRONMENT", "local")
+				_ = os.Setenv("OTEL_GO_X_EXEMPLAR", "true")
+				_ = os.Setenv("OTEL_METRICS_EXEMPLAR_FILTER", "always_on")
 			},
 			want:    nil,
 			wantErr: true,
@@ -70,6 +76,8 @@ func TestEnvironmentVariables_validate(t *testing.T) {
 		SpannerDatabaseID string
 		OtelCollectorHost string
 		Environment string
+		OtelGoXExemplar bool
+		OtelMetricsExemplarFilter string
 	}
 	tests := []struct {
 		name    string
@@ -84,7 +92,9 @@ func TestEnvironmentVariables_validate(t *testing.T) {
 				SpannerInstanceID: "test",
 				SpannerDatabaseID: "test",
 				OtelCollectorHost: "test",
-				Environment: "local" ,
+				Environment: "local",
+				OtelGoXExemplar: true,
+				OtelMetricsExemplarFilter: "always_on",
 			},
 			wantErr: false,
 		},
@@ -96,7 +106,9 @@ func TestEnvironmentVariables_validate(t *testing.T) {
 				SpannerInstanceID: "test",
 				SpannerDatabaseID: "test",
 				OtelCollectorHost: "test",
-				Environment: "local" ,
+				Environment: "local",
+				OtelGoXExemplar: true,
+				OtelMetricsExemplarFilter: "always_on",
 			},
 			wantErr: true,
 		},
@@ -108,7 +120,9 @@ func TestEnvironmentVariables_validate(t *testing.T) {
 				SpannerInstanceID: "test",
 				SpannerDatabaseID: "test",
 				OtelCollectorHost: "test",
-				Environment: "local" ,
+				Environment: "local",
+				OtelGoXExemplar: true,
+				OtelMetricsExemplarFilter: "always_on",
 			},
 			wantErr: true,
 		},
@@ -120,7 +134,9 @@ func TestEnvironmentVariables_validate(t *testing.T) {
 				SpannerInstanceID: "",
 				SpannerDatabaseID: "test",
 				OtelCollectorHost: "test",
-				Environment: "local" ,
+				Environment: "local",
+				OtelGoXExemplar: true,
+				OtelMetricsExemplarFilter: "always_on",
 			},
 			wantErr: true,
 		},
@@ -132,7 +148,9 @@ func TestEnvironmentVariables_validate(t *testing.T) {
 				SpannerInstanceID: "test",
 				SpannerDatabaseID: "",
 				OtelCollectorHost: "test",
-				Environment: "local" ,
+				Environment: "local",
+				OtelGoXExemplar: true,
+				OtelMetricsExemplarFilter: "always_on",
 			},
 			wantErr: true,
 		},
@@ -146,6 +164,8 @@ func TestEnvironmentVariables_validate(t *testing.T) {
 				SpannerDatabaseID: tt.fields.SpannerDatabaseID,
 				OtelCollectorHost: tt.fields.OtelCollectorHost,
 				Environment: tt.fields.Environment,
+				OtelGoXExemplar: tt.fields.OtelGoXExemplar,
+				OtelMetricsExemplarFilter: tt.fields.OtelMetricsExemplarFilter,
 			}
 			if err := e.validate(); (err != nil) != tt.wantErr {
 				t.Errorf("validate() error = %v, wantErr %v", err, tt.wantErr)

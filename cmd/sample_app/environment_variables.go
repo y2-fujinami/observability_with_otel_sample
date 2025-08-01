@@ -24,6 +24,10 @@ type EnvironmentVariables struct {
 	Environment string `envconfig:"ENVIRONMENT"`
 	// UseOtelStdExporter 標準出力へテレメトリーデータを出力するか
 	UseOtelStdoutExporter bool `envconfig:"USE_OTEL_STDOUT_EXPORTER"`
+	// OtelGoXExemplar Otel のメトリクスに Exemplar を付与するか
+	OtelGoXExemplar bool `envconfig:"OTEL_GO_X_EXEMPLAR"`
+	// OtelMetricsExemplarFilter Otel のメトリクスに Exemplar をを含める条件
+	OtelMetricsExemplarFilter string `envconfig:"OTEL_METRICS_EXEMPLAR_FILTER"`
 }
 
 // LoadEnvironmentVariables 環境変数を読み込む
@@ -58,7 +62,10 @@ func (e *EnvironmentVariables) validate() error {
 	collectEnvs := []string{"local", "dev"}
 	if !slices.Contains(collectEnvs, e.Environment) {
 		return errors.New("environment variable Environment is not collect")
-	}
+	}	
+	if !slices.Contains([]string{"always_on", "always_off", "trace_based"}, e.OtelMetricsExemplarFilter) {
+		return errors.New("environment variable OtelMetricsExemplarFilter is not collect")
+	} 
 
 	return nil
 }

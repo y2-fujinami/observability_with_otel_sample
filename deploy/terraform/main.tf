@@ -81,6 +81,14 @@ resource "google_cloud_run_v2_service" "api" {
         name = "ENVIRONMENT"
         value = "dev"
       }
+      env {
+        name = "OTEL_GO_X_EXEMPLAR"
+        value =  "true"
+      }
+      env {
+        name = "OTEL_METRICS_EXEMPLAR_FILTER"
+        value = "always_on"
+      }
 
       startup_probe {
         grpc {}
@@ -125,7 +133,7 @@ resource "google_cloud_run_v2_service" "api" {
         initial_delay_seconds = 5
         timeout_seconds       = 1
         period_seconds        = 5
-        failure_threshold     = 5
+        failure_threshold     = 10
       }
 
       liveness_probe {
