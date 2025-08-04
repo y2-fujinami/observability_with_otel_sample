@@ -31,7 +31,7 @@ import (
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	"go.opentelemetry.io/otel/semconv/v1.26.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -363,38 +363,31 @@ func randProcStatusInterceptor(ctx context.Context, req interface{}, info *grpc.
 		span.End()
 	}()
 
-	errCount, err := meter.Int64Counter("procStateError", metric.WithDescription("procStateError count"))
+	procState := randProcStatus()
+
+	// 処理ステータスのヒストグラム
+    procStateHist, err := meter.Int64Histogram(
+		"procState",
+		metric.WithExplicitBucketBoundaries(-0.5, 0.5, 1.5, 2.5), // これによりバケットの区間は (-∞, -0.5), [-0.5, 1.5), [1.5, 2.5), [2.5, ∞) になる
+	)
 	if err != nil {
-		err = fmt.Errorf("failed to meter.Int64Counter")
+		err = fmt.Errorf("failed to meter.Int64Histgram(): %w", err)
 		return
 	}
+	procStateHist.Record(ctx, int64(procState), metric.WithAttributes(commonAttrs...))
 
-	highLatencyCount, err := meter.Int64Counter("procStateHighLatency", metric.WithDescription("procStateHighLatency count"))
-	if err != nil {
-		err = fmt.Errorf("failed to meter.Int64Counter")
-		return
-	}
 
-	normalCount, err := meter.Int64Counter("procStateNormal", metric.WithDescription("procStateNormal count"))
-	if err != nil {
-		err = fmt.Errorf("failed to meter.Int64Counter")
-		return
-	}
-
-	switch randProcStatus() {
+	switch procState {
 	case procStateError:
-		errCount.Add(ctx, 1, metric.WithAttributes(commonAttrs...))
 		err = fmt.Errorf("procState is error")
 		return
 	case procStateHighLatency:
 		<-time.After(2*time.Second)
 		logger.InfoContext(ctx, "procState is highLatency. 2 second waited")
-		highLatencyCount.Add(ctx, 1, metric.WithAttributes(commonAttrs...))
 		res, err = handler(ctx, req)
 		return	
 	default:
 		logger.InfoContext(ctx, "procState is normal")
-		normalCount.Add(ctx, 1, metric.WithAttributes(commonAttrs...))
 		res, err = handler(ctx, req)
 		return
 	}
